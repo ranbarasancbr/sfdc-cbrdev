@@ -1,0 +1,2 @@
+Opportunity class
+line 1
