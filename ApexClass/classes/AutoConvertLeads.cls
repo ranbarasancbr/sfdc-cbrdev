@@ -1,4 +1,5 @@
 Public class AutoConvertLeads
+// auto convert leads based on the MQL score
 {
     @InvocableMethod
     public static void LeadAssign(List<Id> LeadIds)
