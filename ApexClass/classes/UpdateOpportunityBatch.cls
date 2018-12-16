@@ -1,14 +1,14 @@
 /***************************************************************************************************************************************************************************
  * Component Name : UpdateOpportunityBatch
- * Description	: This batch is scheduled every 4 hours to update opportunity. 
-				   Update of opportunity check if any change in primary or secondary contact role if true then update primary and secondary contact fields on opportunity
+ * Description  : This batch is scheduled every 4 hours to update opportunity. 
+                   Update of opportunity check if any change in primary or secondary contact role if true then update primary and secondary contact fields on opportunity
  * Created By: TEKSystems
  * Userstorie: CBRSFDC8-209  
 ******************************************************************************************************************************************************************************/
  
 global class UpdateOpportunityBatch implements Database.Batchable<Sobject> {
     global Database.QueryLocator start(Database.BatchableContext bc) {
-        return Database.getQueryLocator([Select Id,Ship_To_Name__c,Ship_To_Adrdess__c,Ship_To_Phone__c,Clients_Time_Zone__c,
+        return Database.getQueryLocator([Select Id,Ship_To_Name__c,Ship_To_Street1__c,Ship_To_Phone__c,Clients_Time_Zone__c,
                                          Name,Delivering_Hospital__c,LeadSource,PickUp_or_Ship_Kit__c ,
                                          Shipping_Method__c ,Primary_Source__c,Requested_Shipping_Date__c,Due_Date__c,
                                          StageName From Opportunity ]);

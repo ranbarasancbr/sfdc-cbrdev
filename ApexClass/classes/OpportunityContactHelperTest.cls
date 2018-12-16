@@ -14,10 +14,14 @@ public class OpportunityContactHelperTest {
         op1.CloseDate =  system.today().addDays(24);
         op1.StageName = 'Overcoming Objections (6)';
         op1.PickUp_or_Ship_Kit__c = 'Ship';
+        
         op1.Ship_To_Phone__c = '9999999999';
         op1.Requested_Shipping_Date__c = system.today();
         op1.Ship_To_Name__c = 'Test';
-        op1.Ship_To_Adrdess__c = 'Test Address';
+        op1.Ship_To_Street1__c = 'Test Address';
+        op1.Ship_To_State__c = 'Arizona';
+        op1.Ship_To_Zip_Code__c = '85281';
+        op1.Ship_To_Phone__c = '9999999999';
         op1.Primary_Source__c = 'Advertising (Magazine, Internet)';
         op1.Shipping_Method__c = 'Priority Overnight';
         op1.LeadSource = 'Chat';
@@ -80,9 +84,11 @@ system.debug('c.Client_Flag__c'+c.Client_Flag__c);
         op2.StageName = 'Overcoming Objections (6)';
         op2.PickUp_or_Ship_Kit__c = 'Ship';
         op2.Ship_To_Phone__c = '9999999999';
-        op2.Requested_Shipping_Date__c = system.today();
-        op2.Ship_To_Name__c = 'Test';
-        op2.Ship_To_Adrdess__c = 'Test Address';
+        
+        op2.Ship_To_Street1__c = 'Test Address';
+        op2.Ship_To_State__c = 'Arizona';
+        op2.Ship_To_Zip_Code__c = '85281';
+        
         op2.Primary_Source__c = 'Advertising (Magazine, Internet)';
         op2.Shipping_Method__c = 'Priority Overnight';
         op2.LeadSource = 'Chat';

@@ -10,7 +10,7 @@ public class opportunityValidateAndMergeTest {
         
         List<Contact> contList = new List<Contact>();
         contList.add(new Contact(AccountId = acclist[0].Id,FirstName = 'John',LastName = 'Mayer',Phone = '9009009009',Email ='john@testdata.com',MailingStreet = '298 S. Ringo Street',MailingCity = 'Hanover',MailingState = 'Texas',MailingPostalCode = '73301',MailingCountry = 'United States'));
-        contList.add(new Contact(AccountId = acclist[1].Id,FirstName = 'Tom',LastName = 'Hawks',Phone = '9845012345',Email ='tom@testdata.com',MailingStreet = '298 S. Ringo Street',MailingCity = 'Hanover',MailingState = 'Texas',MailingPostalCode = '73301',MailingCountry = 'United States'));
+        contList.add(new Contact(AccountId = acclist[1].Id,FirstName = 'Tom',Description = 'Duplicate Primary',LastName = 'Hawks',Phone = '9845012345',Email ='tom@testdata.com',MailingStreet = '298 S. Ringo Street',MailingCity = 'Hanover',MailingState = 'Texas',MailingPostalCode = '73301',MailingCountry = 'United States'));
         contList.add(new Contact(AccountId = acclist[1].Id,FirstName = 'TomExa',LastName = 'HawksTest',Phone = '9845012399',Email ='tom@testdata.com',MailingStreet = '298 S. Ringo',MailingCity = 'Hanover',MailingState = 'Texas',MailingPostalCode = '73301',MailingCountry = 'United States'));
         contList.add(new Contact(AccountId = acclist[1].Id,FirstName = 'Test4323',LastName = 'usertest',Phone = '9845010045',Email ='tom@testdata.com',MailingStreet = '298 S. Ringo',MailingCity = 'Hanover',MailingState = 'Texas',MailingPostalCode = '73301',MailingCountry = 'United States'));
         insert contList;
@@ -19,15 +19,21 @@ public class opportunityValidateAndMergeTest {
         List<Provider__c> providerlist = new List<Provider__c>();
         providerlist.add(new Provider__c(Master_Provider_Id__c = 'MP1',Provider_First_Name__c = 'Rock',Provider_Last_Name__c = 'Bottom'));
         providerlist.add(new Provider__c(Master_Provider_Id__c = 'MP2',Provider_First_Name__c = 'TestMP2',Provider_Last_Name__c = 'TestLN2'));
+         providerlist.add(new Provider__c(Master_Provider_Id__c = 'MP3',Provider_First_Name__c = 'Rock1',Provider_Last_Name__c = 'Bottom1'));
+        providerlist.add(new Provider__c(Master_Provider_Id__c = 'MP4',Provider_First_Name__c = 'TestMP21',Provider_Last_Name__c = 'TestLN21'));
         insert providerlist;
         List<Facility__c> facilityList = new List<Facility__c>();
         facilityList.add(new Facility__c(Facility_Name__c = 'St Marks',Master_Facility_Id__c = 'MF1'));
         facilityList.add(new Facility__c(Facility_Name__c = 'testFac',Master_Facility_Id__c = 'MF2'));
+        facilityList.add(new Facility__c(Facility_Name__c = 'St Marks1',Master_Facility_Id__c = 'MF3'));
+        facilityList.add(new Facility__c(Facility_Name__c = 'testFac1',Master_Facility_Id__c = 'MF4'));
         insert facilityList;
         
         List<Provider_Facility__c> PFList = new List<Provider_Facility__c>();
         PFList.add(new Provider_Facility__c(Facility__c = facilityList[0].id,Provider__c = providerlist[0].id,Master_Provider_Facility_ID__c = 'MPF1'));
         PFList.add(new Provider_Facility__c(Facility__c = facilityList[1].id,Provider__c = providerlist[1].id,Master_Provider_Facility_ID__c = 'MPF2'));
+         PFList.add(new Provider_Facility__c(Facility__c = facilityList[2].id,Provider__c = providerlist[2].id,Master_Provider_Facility_ID__c = 'MPF3'));
+        PFList.add(new Provider_Facility__c(Facility__c = facilityList[3].id,Provider__c = providerlist[3].id,Master_Provider_Facility_ID__c = 'MPF4'));
         insert PFList;
         
         Opportunity opp1 = new Opportunity();
@@ -57,7 +63,6 @@ public class opportunityValidateAndMergeTest {
         WinningOpp.Due_Date__c = system.today().addDays(20);        
         WinningOpp.CloseDate = system.today();
         WinningOpp.of_Babies__c = 'Single';
-        WinningOpp.Adoption_Type__c = 'Open';
         WinningOpp.of_CB__c='1';
         WinningOpp.of_CT__c='0';
         WinningOpp.Description = 'Winning Opportunity';
@@ -79,14 +84,10 @@ public class opportunityValidateAndMergeTest {
         WinningOpp.Requested_Shipping_Method__c = Null ;
         WinningOpp.Saturday_Delivery__c = False;
         WinningOpp.Signature_Required__c = False;        
-        WinningOpp.of_Babies__c = 'Single';        
-        WinningOpp.of_CB__c='1';
-        WinningOpp.of_CT__c='0';
         WinningOpp.Gift_Registry_Start_Date__c = Null ;
         WinningOpp.Gift_Registry_End_Date__c = Null ;
         WinningOpp.Adoption_Type__c = 'N/A';
         WinningOpp.Primary_Source__c = Null;
-        //WinningOpp.Referred_By_Contact_Id__c = 'Vincient';
         WinningOpp.Section_1_Received__c = False;
         WinningOpp.Section_2_Received__c = False;
         WinningOpp.Section_3_Received__c = False;
@@ -101,7 +102,6 @@ public class opportunityValidateAndMergeTest {
         WinningOpp.Section_5_Received_Birth_Mother__c = False;
         WinningOpp.Delivering_Hospital__c = Null;
         WinningOpp.Payment_Method__c = 'Credit Card';
-       // WinningOpp.OpportunityMerge__c = opp1.Id;
         insert WinningOpp;
         
         Opportunity LosingOpp = New Opportunity();
@@ -183,8 +183,8 @@ public class opportunityValidateAndMergeTest {
         
         //Opportunity Contact Roles for winning and losing opp
         list<OpportunityContactRole> OCRList = new List<OpportunityContactRole>();
-        OCRList.add(new OpportunityContactRole(ContactId = contList[0].id,OpportunityId = WinningOpp.id,Role = 'Mother'));
-        OCRList.add(new OpportunityContactRole(ContactId = contList[1].id,OpportunityId = LosingOpp.id,Role = 'Mother'));
+        OCRList.add(new OpportunityContactRole(ContactId = contList[0].id,OpportunityId = WinningOpp.id,Role = 'Mother',isPrimary = true));
+        OCRList.add(new OpportunityContactRole(ContactId = contList[1].id,OpportunityId = LosingOpp.id,Role = 'Mother',isPrimary = true));
         OCRList.add(new OpportunityContactRole(ContactId = contList[2].id,OpportunityId = LosingOpp.id,Role = 'Unknown'));
         OCRList.add(new OpportunityContactRole(ContactId = contList[3].id,OpportunityId = LosingOpp.id,Role = 'Father'));
         insert OCRList;
@@ -192,7 +192,9 @@ public class opportunityValidateAndMergeTest {
         //Inserting Opportunity provider for winning and losing opportunities
         List<Opportunity_Provider__c> oppProviderlist = new List<Opportunity_Provider__c>();
         oppProviderlist.add(new Opportunity_Provider__c(Facility__c =facilityList[0].id ,Provider__c = providerlist[0].id,Primary_Provider__c = false,Delivering_Provider__c = false,Opportunity__c = WinningOpp.Id,Provider_Facility__c = PFList[0].id));
-        oppProviderlist.add(new Opportunity_Provider__c(Facility__c = facilityList[1].id ,Provider__c =providerlist[1].id,Primary_Provider__c = true,Delivering_Provider__c = true,Opportunity__c = LosingOpp.Id,Provider_Facility__c = PFList[1].id));
+        oppProviderlist.add(new Opportunity_Provider__c(Facility__c = facilityList[1].id ,Provider__c =providerlist[1].id,Primary_Provider__c = true,Delivering_Provider__c = true,Opportunity__c = WinningOpp.Id,Provider_Facility__c = PFList[1].id));
+         oppProviderlist.add(new Opportunity_Provider__c(Facility__c =facilityList[2].id ,Provider__c = providerlist[2].id,Primary_Provider__c = false,Delivering_Provider__c = false,Opportunity__c = LosingOpp.Id,Provider_Facility__c = PFList[2].id));
+        oppProviderlist.add(new Opportunity_Provider__c(Facility__c = facilityList[3].id ,Provider__c =providerlist[3].id,Primary_Provider__c = false,Delivering_Provider__c = false,Opportunity__c = LosingOpp.Id,Provider_Facility__c = PFList[3].id));
         
         insert oppProviderlist;
         
@@ -248,6 +250,7 @@ public class opportunityValidateAndMergeTest {
                 LosingOpp = opp;
             }
         }
+        system.debug('LosingOpp==== testMethod1'+LosingOpp);
         List<opportunity> oppupdate = new List<opportunity>();
             WinningOpp.OpportunityMerge__c = LosingOpp.id;
             oppupdate.add(WinningOpp);
@@ -257,6 +260,7 @@ public class opportunityValidateAndMergeTest {
              oppupdate.add(LosingOpp);
              update oppupdate;
        // update LosingOpp;
+       system.debug('oppupdate======='+oppupdate);
         system.debug('WinningOpp status'+WinningOpp.Status__C);
         system.debug('Winning opp due date'+WinningOpp.Due_Date__C);
 
@@ -266,8 +270,8 @@ public class opportunityValidateAndMergeTest {
         opportunityMergeController omc = new opportunityMergeController();
         PageReference pageRef = Page.OpportunityMergeTab;
         omc.selectedFields = null;
-        omc.winningOppty = WinningOpp;
-        omc.LosingOpty = LosingOpp;
+        omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
         omc.selectedvalue = 'Standard';
         omc.MergeOpportunities();
         omc.radioButtonMethod();
@@ -315,20 +319,24 @@ public class opportunityValidateAndMergeTest {
         system.assertEquals(LosingOpp.Status__c,'Closed_Lost');
         System.assertEquals(LosingOpp.Loss_Reason__c,'Duplicate record');
         //Below code check if all opportunityContactRoles are re parented with correct roles
-        List<OpportunityContactRole> oppOCRList = [Select id,Role,OpportunityId From OpportunityContactRole Where OpportunityId =:WinningOpp.id ];
+        List<OpportunityContactRole> oppOCRList = [Select id,Role,OpportunityId,ContactId,Contact.Description,isPrimary From OpportunityContactRole Where OpportunityId =:WinningOpp.id ];
         system.assertEquals(oppOCRList.size(),4);
         Boolean OCRRoles = false;
         Set<String> roles = new Set<String>{'Duplicate','Unknown','Mother','Father'};
+        Boolean dupPrimaryCheck = true;
             for(OpportunityContactRole ocr:oppOCRList){
                 if(roles.contains(ocr.Role)){
                     OCRRoles = true;
                 }
+                if(ocr.contact.Description == 'Duplicate Primary'){
+                   dupPrimaryCheck = ocr.isPrimary;//This boolean is to verify losing opp's primary contact role is reparented but it is not primary on winning opp
+                }
             }
         system.assertEquals(OCRRoles,true);
-        
+        system.assertEquals(dupPrimaryCheck,false);
         //Query on opp provider to check opportuity provider is reparented successfully
-        List<Opportunity_Provider__c> oppProList = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id ];
-        system.assertEquals(oppProList.size(),2);
+       // List<Opportunity_Provider__c> oppProList = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id];
+       // system.assertEquals(oppProList.size(),2);
         
         //Check CampaignInfluence is re parented
         CampaignInfluence winOppCI = [Select id,OpportunityId from CampaignInfluence];
@@ -351,6 +359,7 @@ public class opportunityValidateAndMergeTest {
         system.assertEquals(winOppAsset.Opportunity__c,WinningOpp.id);
         Test.StopTest();
     }
+    //Unit test for Reparenting Alll Opp Providers
     @isTest static void testMethod2(){
         Test.StartTest();
         List<Opportunity> oppList = [select id,name,Description,Storage_Date__c,Pending_Date__c,StageName,Status__c,OpportunityMerge__c,Primary_Contact_First_Name__c,Primary_Contact_Last_Name__c,due_date__c,CreatedDate,of_Babies__c,of_CB__c,of_CT__c,Adoption_Type__c,Primary_Source__c,Referred_By_Opportunity__c,Section_2_Received_Birth_Mother__c,Section_3_Incomplete_Birth_Mother__c,Section_3_Received_Birth_Mother__c,Section_3_Needs_Review_Birth_Mother__c,Section_1_Received__c,Section_2_Received__c,Section_3_Received__c,Section_3_Incomplete__c,Section_3_Needs_Review__c,Section_4_Received__c,Section_5_Received__c,Delivering_Hospital__c,Payment_Plan__c,Payment_Method__c,CB_Storage_Fee_Option__c,CT_Storage_Fee_Option__c,Corporate_Discount__c,Promo_Code__c,Manual_Discount__c,Discount_Comments__c,PickUp_or_Ship_Kit__c,Ship_To_Name__c,Ship_To_Street1__c,Ship_To_Phone__c,Total_Expedited_Shipping_Cost__c,Shipping_Method__c,Requested_Shipping_Method__c,Requested_Shipping_Date__c,Saturday_Delivery__c,Signature_Required__c,PriceBook2Id,Opportunity_Merged_By__c,Opportunity_Merged_Date__c,Losing_Opportunity__c,Primary_Contact__c,Secondary_Contact__c,Online_Enrollment__c,Section_5_Received_Birth_Mother__c,OwnerId,Gift_Registry_End_Date__c,Gift_Registry_Start_Date__c,Ship_To_Street2__c,Ship_To_City__c,Ship_To_State__c,Ship_To_Zip_Code__c,Ship_To_Country__c from opportunity];
@@ -365,63 +374,57 @@ public class opportunityValidateAndMergeTest {
             }
         }
        List<opportunity> oppupdate = new List<opportunity>();
+       //Updating winning opp with Losing Opp id
             WinningOpp.OpportunityMerge__c = LosingOpp.id;
             oppupdate.add(WinningOpp);
-       // update WinningOpp;
+       //Update losing opp status n storage date
              LosingOpp.Storage_Date__c = null;
              LosingOpp.Status__c = 'Open';
              oppupdate.add(LosingOpp);
              update oppupdate;
-       // update LosingOpp;
-        system.debug('WinningOpp status'+WinningOpp.Status__C);
-        system.debug('Winning opp due date'+WinningOpp.Due_Date__C);
+      
+        List<Provider_Facility__c> pf = [Select id,Provider__c,Facility__c,Master_Provider_Facility_ID__c from Provider_Facility__c];
+        List<Opportunity_Provider__c> oppProList = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c,Provider_Facility__r.Master_Provider_Facility_ID__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id OR Opportunity__c =:LosingOpp.id];
 
-        system.debug('Losing Storage_Date__c'+LosingOpp.Storage_Date__c);
-        system.debug('Losing Pending_Date__c'+LosingOpp.Pending_Date__c);
-        system.debug('Status__c======='+LosingOpp.Status__c);
-        Provider_Facility__c pf = [Select id,Provider__c,Facility__c,Master_Provider_Facility_ID__c from Provider_Facility__c where Master_Provider_Facility_ID__c = 'MPF1'];
-        List<Opportunity_Provider__c> oppProList = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id OR Opportunity__c =:LosingOpp.id];
-        Opportunity_Provider__c winOp = new Opportunity_Provider__c();
-        Opportunity_Provider__c lossOp = new Opportunity_Provider__c();
+        Opportunity_Provider__c p1 = new Opportunity_Provider__c();
+        Opportunity_Provider__c p2 = new Opportunity_Provider__c();
+        Opportunity_Provider__c p3 = new Opportunity_Provider__c();
+        Opportunity_Provider__c p4 = new Opportunity_Provider__c();
         for(Opportunity_Provider__c op:oppProList){
-            if(op.Opportunity__c == WinningOpp.id){
-                winOp = op;
+            if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF1'){
+                p1 = op;
             }
-            else{
-                lossOp = op; 
+            else if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF2'){
+                p2 = op;
+            }
+            else if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF3'){
+                p3 = op;
+            }
+             else{
+                p4 = op;
             }
         }
-        system.debug('WinningOpp status'+WinningOpp.Status__C);
-        system.debug('Winning opp due date'+WinningOpp.Due_Date__C);
-
-        system.debug('Losing Storage_Date__c'+LosingOpp.Storage_Date__c);
-        system.debug('Losing Pending_Date__c'+LosingOpp.Pending_Date__c);
-        system.debug('Status__c======='+LosingOpp.Status__c);
-        List<Opportunity_Provider__c> delOp = new List<Opportunity_Provider__c>();
-        delOp.add(lossOp);
-        list<DataBase.DeleteResult> saveresults = DataBase.delete(delOp,false);
-        system.debug('saveresults'+saveresults);
-        Opportunity_Provider__c newLOp = new Opportunity_Provider__c(Facility__c = pf.Facility__c ,Provider__c =pf.Provider__c,Primary_Provider__c = true,Delivering_Provider__c = true,Opportunity__c = LosingOpp.Id,Provider_Facility__c = pf.id);
-        // insert newLOp;
-        List<Opportunity_Provider__c> insertOps = new List<Opportunity_Provider__c>();
-        insertOps.add(newLOp);
-        List<Database.SaveResult> insertResult = Database.insert(insertOps,false);
-        system.debug('insertResult===='+insertResult);
-        
         opportunityMergeController omc = new opportunityMergeController();
         PageReference pageRef = Page.OpportunityMergeTab;
         omc.selectedFields = null;
+        omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
         omc.winningOppty = WinningOpp;
         omc.LosingOpty = LosingOpp;
         omc.selectedvalue = 'Standard';
         omc.MergeOpportunities();
         omc.radioButtonMethod();
         omc.getOpportunity1();  
+
+        List<Opportunity_Provider__c> oppProList1 = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c,Provider_Facility__r.Master_Provider_Facility_ID__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id];
+        //All opp provides should be reparented
+        system.assertEquals(oppProList1.size(),4);
+        system.assertEquals(oppProList1[0].Opportunity__c,WinningOpp.id);
+        system.assertEquals(oppProList1[1].Opportunity__c,WinningOpp.id);
+        system.assertEquals(oppProList1[2].Opportunity__c,WinningOpp.id);
+        system.assertEquals(oppProList1[3].Opportunity__c,WinningOpp.id);
         
-        Opportunity_Provider__c winOPUpdated = [select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c from Opportunity_Provider__c where id =:winOp.id];
-        system.assertEquals(winOPUpdated.Delivering_Provider__c,true);
-        system.assertEquals(winOPUpdated.Primary_Provider__c,true);
-        
+
         Test.stopTest();
     }
     @isTest static void testMethod3(){
@@ -463,6 +466,8 @@ public class opportunityValidateAndMergeTest {
         opportunityMergeController omc = new opportunityMergeController();
         PageReference pageRef = Page.OpportunityMergeTab;
         omc.selectedFields = selectedFields;
+        omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
         omc.winningOppty = WinningOpp;
         omc.LosingOpty = LosingOpp;
         omc.selectedvalue = 'Custom';
@@ -513,8 +518,10 @@ public class opportunityValidateAndMergeTest {
             opportunityMergeController omc = new opportunityMergeController();
             PageReference pageRef = Page.OpportunityMergeTab;
             omc.selectedFields = null;
-            omc.winningOppty = WinningOpp;
-            omc.LosingOpty = LosingOpp;
+           omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
+        omc.winningOppty = WinningOpp;
+        omc.LosingOpty = LosingOpp;
             omc.selectedvalue = 'Custom';
             omc.MergeOpportunities();
             omc.getOpportunity1();
@@ -565,8 +572,10 @@ public class opportunityValidateAndMergeTest {
             opportunityMergeController omc = new opportunityMergeController();
             PageReference pageRef = Page.OpportunityMergeTab;
             omc.selectedFields = null;
-            omc.winningOppty = WinningOpp;
-            omc.LosingOpty = LosingOpp;
+            omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
+        omc.winningOppty = WinningOpp;
+        omc.LosingOpty = LosingOpp;
             omc.selectedvalue = 'Standard';
             omc.MergeOpportunities();
             omc.getOpportunity1();
@@ -582,8 +591,8 @@ public class opportunityValidateAndMergeTest {
             opportunityMergeController omc = new opportunityMergeController();
             PageReference pageRef = Page.OpportunityMergeTab;
             omc.selectedFields = null;
-            omc.winningOppty = null;
-            omc.LosingOpty = null;
+            omc.winningOpptyOnUI = null;
+        omc.LosingOptyOnUI = null;
             omc.selectedvalue = 'Standard';
             omc.MergeOpportunities();
             omc.getOpportunity1();
@@ -643,8 +652,10 @@ public class opportunityValidateAndMergeTest {
             opportunityMergeController omc = new opportunityMergeController();
             PageReference pageRef = Page.OpportunityMergeTab;
             omc.selectedFields = null;
-            omc.winningOppty = WinningOpp;
-            omc.LosingOpty = LosingOpp;
+            omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
+        omc.winningOppty = WinningOpp;
+        omc.LosingOpty = LosingOpp;
             omc.selectedvalue = 'Standard';
             omc.MergeOpportunities();
             omc.getOpportunity1();
@@ -656,6 +667,85 @@ public class opportunityValidateAndMergeTest {
             
         }
         test.StopTest();
+    } 
+    //Unit test for Reparenting required Opp Providers
+    @isTest static void testMethod8(){
+        Test.StartTest();
+        List<Opportunity> oppList = [select id,name,Description,Storage_Date__c,Pending_Date__c,StageName,Status__c,OpportunityMerge__c,Primary_Contact_First_Name__c,Primary_Contact_Last_Name__c,due_date__c,CreatedDate,of_Babies__c,of_CB__c,of_CT__c,Adoption_Type__c,Primary_Source__c,Referred_By_Opportunity__c,Section_2_Received_Birth_Mother__c,Section_3_Incomplete_Birth_Mother__c,Section_3_Received_Birth_Mother__c,Section_3_Needs_Review_Birth_Mother__c,Section_1_Received__c,Section_2_Received__c,Section_3_Received__c,Section_3_Incomplete__c,Section_3_Needs_Review__c,Section_4_Received__c,Section_5_Received__c,Delivering_Hospital__c,Payment_Plan__c,Payment_Method__c,CB_Storage_Fee_Option__c,CT_Storage_Fee_Option__c,Corporate_Discount__c,Promo_Code__c,Manual_Discount__c,Discount_Comments__c,PickUp_or_Ship_Kit__c,Ship_To_Name__c,Ship_To_Street1__c,Ship_To_Phone__c,Total_Expedited_Shipping_Cost__c,Shipping_Method__c,Requested_Shipping_Method__c,Requested_Shipping_Date__c,Saturday_Delivery__c,Signature_Required__c,PriceBook2Id,Opportunity_Merged_By__c,Opportunity_Merged_Date__c,Losing_Opportunity__c,Primary_Contact__c,Secondary_Contact__c,Online_Enrollment__c,Section_5_Received_Birth_Mother__c,OwnerId,Gift_Registry_End_Date__c,Gift_Registry_Start_Date__c,Ship_To_Street2__c,Ship_To_City__c,Ship_To_State__c,Ship_To_Zip_Code__c,Ship_To_Country__c from opportunity];
+        Opportunity WinningOpp = new Opportunity();
+        opportunity LosingOpp = new Opportunity();
+        for(Opportunity opp:oppList){
+            if(opp.Description == 'Winning Opportunity'){
+                WinningOpp = opp;
+            }
+            else if(opp.Description == 'Losing Opportunity'){
+                LosingOpp = opp;
+            }
+        }
+       List<opportunity> oppupdate = new List<opportunity>();
+       //Updating winning opp with Losing Opp id
+            WinningOpp.OpportunityMerge__c = LosingOpp.id;
+            oppupdate.add(WinningOpp);
+       //Update losing opp status n storage date
+             LosingOpp.Storage_Date__c = null;
+             LosingOpp.Status__c = 'Open';
+             oppupdate.add(LosingOpp);
+             update oppupdate;
+      
+        List<Provider_Facility__c> pf = [Select id,Provider__c,Facility__c,Master_Provider_Facility_ID__c from Provider_Facility__c];
+        List<Opportunity_Provider__c> oppProList = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c,Provider_Facility__r.Master_Provider_Facility_ID__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id OR Opportunity__c =:LosingOpp.id];
+        
+        Opportunity_Provider__c p1 = new Opportunity_Provider__c();
+         Opportunity_Provider__c p2 = new Opportunity_Provider__c();
+        Opportunity_Provider__c p3 = new Opportunity_Provider__c();
+        for(Opportunity_Provider__c op:oppProList){
+            if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF1'){
+                p1 = op;
+            }
+            else if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF3'){
+                p3 = op;
+            }
+            else if(op.Provider_Facility__r.Master_Provider_Facility_ID__c == 'MPF2'){
+                p2 = op;
+            }
+        }
+        List<Opportunity_Provider__c> updateOPs = new List<Opportunity_Provider__c>();
+        p1.Delivering_Provider__c = true;
+        p1.Primary_Provider__c = true;
+        updateOPs.add(p1);
+        p2.Delivering_Provider__c = false;
+        p2.Primary_Provider__c = false;
+        update p2;
+        //updateOPs.add(p2);
+        p3.Provider__c = p1.Provider__c;
+        p3.Facility__c = p1.Facility__c;
+        p3.Provider_Facility__c = p1.Provider_Facility__c;
+        p3.Delivering_Provider__c = true;
+        p3.Primary_Provider__c = true;
+        updateOPs.add(p3);
+         
+
+        update updateOPs;
+
+        opportunityMergeController omc = new opportunityMergeController();
+        PageReference pageRef = Page.OpportunityMergeTab;
+        omc.selectedFields = null;
+        omc.winningOpptyOnUI = WinningOpp;
+        omc.LosingOptyOnUI = LosingOpp;
+        omc.winningOppty = WinningOpp;
+        omc.LosingOpty = LosingOpp;
+        omc.selectedvalue = 'Standard';
+        omc.MergeOpportunities();
+        omc.radioButtonMethod();
+        omc.getOpportunity1();  
+
+        List<Opportunity_Provider__c> oppProList1 = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c,Provider_Facility__r.Master_Provider_Facility_ID__c from Opportunity_Provider__c  where Opportunity__c =:WinningOpp.id];
+
+        system.assertEquals(oppProList1.size(),3);
+
+         List<Opportunity_Provider__c> oppProList2 = [Select id,Delivering_Provider__c,Primary_Provider__c,Opportunity__c,Provider__c,Provider_Facility__c,Facility__c,Provider_Facility__r.Master_Provider_Facility_ID__c from Opportunity_Provider__c  where Opportunity__c =:LosingOpp.id];
+        
+        system.assertEquals(oppProList2.size(),1);
+        Test.stopTest();
     }
-    
 }

@@ -497,9 +497,13 @@ public class opportunityValidateAndMerge{
         if(LossOppOCRlist!=null && !LossOppOCRlist.isEmpty()){
             for(Opportunity opp:mergedWinOppMap.values()){
                 Set<String> winOcrRoles = new Set<String>();//Tis set holds all roles of winning Opps OCRs
+                Boolean primaryOCR = false;
                 if(WinOppOCRlist!=null && !WinOppOCRlist.isEmpty()){
                    for(OpportunityContactRole ocr:WinOppOCRlist.get(opp.id)){
                         winOcrRoles.add(ocr.Role);
+                        if(ocr.isPrimary){
+                            primaryOCR = true;
+                        }
                     } 
                 } 
                 //If this winning opp's losing opp OCRs are not null then only we create new OCRs for winning opp
@@ -507,7 +511,13 @@ public class opportunityValidateAndMerge{
                     for(OpportunityContactRole ocr:LossOppOCRlist.get(WinLosOppIds.get(opp.id))){
                          OpportunityContactRole o1 = new OpportunityContactRole();
                          o1.OpportunityId = opp.id;
-                         o1.isPrimary = ocr.isPrimary;
+                         if(!primaryOCR && ocr.isPrimary){
+                            o1.isPrimary =  ocr.isPrimary;
+                         }
+                         else if(primaryOCR && ocr.isPrimary){
+                            o1.isPrimary = false;
+                         }
+                        
                          o1.ContactId = ocr.ContactId;
                          //If OCR role is unkown new OCR created with same role
                         if(ocr.Role == 'Unknown'){
@@ -608,81 +618,130 @@ public class opportunityValidateAndMerge{
         if(mergedWinOppMap!=null && !mergedWinOppMap.isEmpty()){
             system.debug('Opp provider records');
             for(Opportunity opp:mergedWinOppMap.values()){
-               Set<id> proivderids = new Set<id>();//This set holds provider of  winning opp's opp provider. This set is used to check same providers are on losing opp's opportunity provider. if same providers are present then instead of reparenting we update opp provider of winning opp 
-                system.debug('Opp');
-                Boolean primaryOP = false;//winning opp doesnt have primary opportunity provider then this boolean is set to true
-                Boolean DeliveringOP = false;//winning opp doesnt have delivering opportunity provider then this boolean is set to true
+               Map<Id,String> WinOppProviderTypeOnOP = new Map<Id,String>();
+                Map<Id,String> losingOppProviderTypeOnOP = new Map<Id,String>();
+                Boolean isPrimary = false;
+                Boolean isDelivering = false;
+               //For each Opp provider of winning Opp add provider Id as key and value as String(if provider is primary= isPrimary, if provider is delivering is Delivering and is Provider is primary n delivering primaryDelProvider if not primary or delivering NONE) to map WinOppProviderTypeOnOP
                 if(WinningOppProviderMap.get(opp.id)!=null && !WinningOppProviderMap.get(opp.id).isEmpty()){
                     for(Opportunity_Provider__c op:WinningOppProviderMap.get(opp.id)){
-                        proivderids.add(op.Provider__c);
-                        if(!op.Primary_Provider__c){
-                            primaryOP = true;
+                        //If executes if provider is primary and delviering
+                        if(op.Primary_Provider__c && op.Delivering_Provider__c){
+                            WinOppProviderTypeOnOP.put(op.Provider__c,'primaryDelProvider');
+                            isPrimary = true;
+                            isDelivering = true;
+                            system.debug('debug---------1');
                         }
-                        if(!op.Delivering_Provider__c){
-                            DeliveringOP = true;
+                        //Below else if executes if op is primary but not delivering 
+                        else if(op.Primary_Provider__c && !op.Delivering_Provider__c){
+                            WinOppProviderTypeOnOP.put(op.Provider__c,'primaryProvider');
+                            isPrimary = true;
+                            system.debug('debug---------2');
                         }
-                    } 
+                        //if opp provider is delivering but not primary then add key value pair to map WinOppProviderTypeOnOP
+                         else if(!op.Primary_Provider__c && op.Delivering_Provider__c){
+                            WinOppProviderTypeOnOP.put(op.Provider__c,'deliveringProvider');
+                            isDelivering = true;
+                            system.debug('debug---------3');
+                        }
+                        //if opp provider is not primary or delivering then add key value pair to map WinOppProviderTypeOnOP
+                        else{
+                            WinOppProviderTypeOnOP.put(op.Provider__c,'None');
+                            system.debug('debug---------4');
+                        }
+                    }//winning opps Opp provider for loop end
                 }
                 else{
-                    primaryOP = true;
-                    DeliveringOP = true;
+                    system.debug(' no winning opp providers');
+                    isPrimary = false;
+                    isDelivering = false;
                 }
-               system.debug('proivderids==========='+proivderids);
-                system.debug('Primary provider==='+primaryOP);
-                system.debug('DeliveringOP========='+DeliveringOP);
-                Map<id,String> oppProvidersMap = new Map<id,String>();
-                //If primaryOP ||  DeliveringOP then we check opp providers of losing opportunity and reparent if provider is not same
-                if(primaryOP || DeliveringOP){
-                    if(LosingOppProviderMap.get(WinLosOppIds.get(opp.id))!=null && !LosingOppProviderMap.get(WinLosOppIds.get(opp.id)).isEmpty()){
-                        for(Opportunity_Provider__c op:LosingOppProviderMap.get(WinLosOppIds.get(opp.id))){
-
-                            if(((primaryOP && op.Primary_Provider__c) || (DeliveringOP && op.Delivering_Provider__c )) && !proivderids.contains(op.Provider__c)){
-                                system.debug('op.Provider__c=================='+op.Provider__c);
-                                system.debug('not same provider');
-                                op.Opportunity__c = opp.id;   
-                                OppProviderToUpdate.add(op);
-                            }
-                            //If provder is repeating then we oppProvidersMap values to update opp proivder on winning opp
-                            else if((primaryOP && op.Primary_Provider__c) || (DeliveringOP && op.Delivering_Provider__c ) &&proivderids.contains(op.Provider__c)){
-                                system.debug('same provider');
-                                if(primaryOP && op.Primary_Provider__c && proivderids.contains(op.Provider__c)){
-                                    system.debug('no primary provider');
-                                    system.debug('op.Provider__c===='+op.Provider__c);
-                                    oppProvidersMap.put(op.Provider__c,'primaryOP');
+                system.debug('WinOppProviderTypeOnOP======='+WinOppProviderTypeOnOP);
+                //If there are opp provides on losing opp then below if conditio n is executed to reparent opp providers of losing opp
+                if(LosingOppProviderMap.get(WinLosOppIds.get(opp.id))!=null && !LosingOppProviderMap.get(WinLosOppIds.get(opp.id)).isEmpty()){
+                    for(Opportunity_Provider__c op:LosingOppProviderMap.get(WinLosOppIds.get(opp.id))){
+                        //If losing opp's provider is in winning opp's provider then we update winning opp's opp provider so below coditions check opp providers on losing opp and add to losingOppProviderTypeOnOP
+                        if(!WinOppProviderTypeOnOP.isEmpty() && WinOppProviderTypeOnOP!=null){
+                             if(WinOppProviderTypeOnOP.containsKey(op.Provider__c)){
+                                system.debug('in winning opp===');
+                                system.debug('op------------'+op);
+                                 String type =  WinOppProviderTypeOnOP.get(op.Provider__c);
+                                 if(type == 'primaryProvider' && op.Delivering_Provider__c){
+                                    losingOppProviderTypeOnOP.put(op.Provider__c,'deliveringProvider');//op with this provider is updated as delivering provider
+                                 }
+                                 else if(type == 'deliveringProvider' && op.Primary_Provider__c){
+                                    losingOppProviderTypeOnOP.put(op.Provider__c,'primaryProvider');//op with this provider is updated as primary provider
+                                 }
+                                 else if(type == 'None'){
+                                   losingOppProviderTypeOnOP.put(op.Provider__c,'PrimaryDeliveringProvider');
+                                 }
+                             }
+                            else{
+                                 system.debug('op------------11'+op);
+                                system.debug('not in winning opp');
+                                system.debug('isPrimary==='+isPrimary);
+                                system.debug('isDelivering==='+isDelivering);
+                                system.debug('op.Primary_Provider__c==='+op.Primary_Provider__c);
+                                system.debug('op.Delivering_Provider__c========'+op.Delivering_Provider__c);
+                                 if(isPrimary && op.Primary_Provider__c || isDelivering && op.Delivering_Provider__c){
+                                    if(isPrimary && op.Primary_Provider__c){
+                                        system.debug('los opp primary');
+                                        op.Primary_Provider__c = false;
+                                     }
+                                     if(isDelivering && op.Delivering_Provider__c){
+                                        system.debug('los opp delivering');
+                                        op.Delivering_Provider__c = false;
+                                    }
+                                    op.Opportunity__c = opp.id;
+                                     OppProviderToUpdate.add(op);
+                                 }
+                                else if(!isPrimary && op.Primary_Provider__c){
+                                    op.Opportunity__c = opp.id;
+                                     OppProviderToUpdate.add(op);
                                 }
-                                if(DeliveringOP && op.Delivering_Provider__c && proivderids.contains(op.Provider__c)){
-                                    system.debug('no delivering  provider');
-                                    system.debug('op.Provider__c====99999'+op.Provider__c);
-                                    oppProvidersMap.put(op.Provider__c,'DeliveringOP');
-                                }
-                                if(primaryOP && DeliveringOP && op.Primary_Provider__c && op.Delivering_Provider__c && proivderids.contains(op.Provider__c)){
-                                    oppProvidersMap.put(op.Provider__c,'DeliverPrimary');
-                                }
+                                else if(!isDelivering && op.Delivering_Provider__c){
+                                    op.Opportunity__c = opp.id;
+                                     OppProviderToUpdate.add(op);
+                                 }
+                                else  if(!op.Primary_Provider__c && !op.Delivering_Provider__c){
+                                    op.Opportunity__c = opp.id;
+                                     OppProviderToUpdate.add(op);
+                                 }
+                               
                             }
-                            
-                        }//End of for loop
-                    }
-                    system.debug('oppProvidersMap============='+oppProvidersMap);
-                    //If providers are repeating then we update winning opp's opp providers
-                    if((oppProvidersMap!=null && !oppProvidersMap.isEmpty()) && (WinningOppProviderMap.get(opp.id)!=null || !WinningOppProviderMap.get(opp.id).isEmpty())){
-                        for(Opportunity_Provider__c op:WinningOppProviderMap.get(opp.id)){
-                            system.debug('winning opp OP');
-                            if(oppProvidersMap.containsKey(op.Provider__c) && oppProvidersMap.get(op.Provider__c) == 'primaryOP'){
-                                op.Primary_Provider__c = true;
-                            }
-                             if(oppProvidersMap.containsKey(op.Provider__c) && oppProvidersMap.get(op.Provider__c) == 'DeliveringOP'){
-                                op.Delivering_Provider__c = true;
-                            }
-                            if(oppProvidersMap.containsKey(op.Provider__c) && oppProvidersMap.get(op.Provider__c) == 'DeliverPrimary'){
-                                op.Primary_Provider__c = true;
-                                op.Delivering_Provider__c = true;
-                            }
+                        }
+                        else{
+                            op.Opportunity__c = opp.id;
                             OppProviderToUpdate.add(op);
                         }
+                       
                     }
+                }//If condition when losing opp have Opportunity providers
+                if(losingOppProviderTypeOnOP!=null && !losingOppProviderTypeOnOP.isEmpty() && WinningOppProviderMap.get(opp.id)!=null && !WinningOppProviderMap.get(opp.id).isEmpty()){
+                    for(Opportunity_Provider__c op:WinningOppProviderMap.get(opp.id)){
+                        system.debug('winning opp update');
+                        if(losingOppProviderTypeOnOP.containsKey(op.Provider__c)){
+                             system.debug('winning opp update1111111111');
+                            String s = losingOppProviderTypeOnOP.get(op.Provider__c);
+                            if(s == 'deliveringProvider' && !isDelivering){
+                                 system.debug('winning opp update22222222222');
+                                op.Delivering_Provider__c = true;
+                            }
+                            else if(s == 'primaryProvider' && !isPrimary){
+                                 system.debug('winning opp update33333333333');
+                                op.Primary_Provider__c = true;
+                            }
+                            else if(!isDelivering && !isPrimary){
+                                 system.debug('winning opp update444444444444');
+                                op.Delivering_Provider__c = true;
+                                 op.Primary_Provider__c = true;
+                            }
+                             OppProviderToUpdate.add(op);
+                        }
+                    }
+
                 }
-                system.debug('OppProviderToUpdate======'+OppProviderToUpdate);
-            }
+            }//End of for Loop of winning Opportunties
         }
        
         //If OppProviderToUpdate is not null update OppProviderToUpdate.

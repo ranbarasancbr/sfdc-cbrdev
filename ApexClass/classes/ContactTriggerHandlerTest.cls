@@ -17,15 +17,15 @@ public class ContactTriggerHandlerTest {
         con.LastName  = 'Test';
         con.AccountId = acc.id;
         con.MailingStreet = '298 S. Ringo Street';
-        con.MailingCity = 'San Bruno';
+        //con.MailingCity = 'San Bruno';
         //con.MailingState = 'AR';
         con.MailingPostalCode = '94066';
-        con.MailingCountry = 'United States';
+        con.Mailingcountry = 'United States';
         con.MQL_Score__c = 1224;
         insert con;  
         contids.add(con.id);
-        System.assertEquals(con.MailingCountry, 'United States');
-        
+        System.assertEquals(con.mailingcountry, 'United States');
+
         Opportunity opp = new Opportunity();
         opp.Name='Sample test'; 
         opp.AccountId = acc.id;
@@ -42,7 +42,7 @@ public class ContactTriggerHandlerTest {
         con1.LastName  = 'Smith';
         con1.AccountId = acc.id;
         con1.MailingStreet = '298 S. Ringo Street';
-        con1.MailingCity = 'San Bruno';
+        //con1.MailingCity = 'San Bruno';
         //con.MailingState = 'AR';
         con1.MailingPostalCode = '94066';
         con1.MailingCountry = 'United States';
@@ -64,8 +64,9 @@ public class ContactTriggerHandlerTest {
         insert ocr;
         
         System.assertEquals(ocr.Role, 'Mother');
-        con.MailingPostalCode = '94067'; 
+        con.MailingPostalCode = '94552'; 
         update con;
+
         ContactTriggerHandler.ContactMQLNullAfterInsert(contids);
         //ContactTriggerHandler.ContactAfterInsert(contids);
         //ContactTriggerHandler.createOpportunityContactRole(opplist);

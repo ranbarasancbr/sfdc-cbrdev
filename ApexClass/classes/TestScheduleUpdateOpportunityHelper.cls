@@ -158,7 +158,10 @@ public class TestScheduleUpdateOpportunityHelper{
         oppobj.Shipping_Method__c = 'Second day';
         oppobj.Requested_Shipping_Date__c = system.today();
         oppobj.Ship_To_Name__c = 'test';
-        oppobj.Ship_To_Adrdess__c = 'test';
+        oppobj.Ship_To_Street1__c = '1024 E Lemon St';
+        oppobj.Ship_To_City__c = 'Tempe';
+        oppobj.Ship_To_Zip_Code__c = '85281';
+        oppobj.Ship_To_Country__c = 'United States';
         Insert oppobj;
         ScheduleUpdateOpportunityHelper.validateOpportunity(oppobj );
     }
