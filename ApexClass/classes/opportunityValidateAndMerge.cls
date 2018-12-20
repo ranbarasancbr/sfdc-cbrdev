@@ -890,8 +890,8 @@ public class opportunityValidateAndMerge{
         List<string> errors = new List<string>();
            Map<String,List<String>> ErrorsMap = new Map<String,List<String>>();
         if(WinLosOppIds!=null && !WinLosOppIds.isEmpty()){
-            LosingOppOpenTasks = [Select Id,WhatId,Status from Task where WhatId IN:WinLosOppIds.values() AND Status = 'Open'];
-            LosingOppOpenEvents = [Select Id,WhatId,StartDateTime from Event where WhatId IN:WinLosOppIds.values() AND StartDateTime >: system.now()];
+            LosingOppOpenTasks = [Select Id,WhatId,Status,WhoId,OwnerId from Task where WhatId IN:WinLosOppIds.values()];
+            LosingOppOpenEvents = [Select Id,WhatId,StartDateTime,WhoId,OwnerId from Event where WhatId IN:WinLosOppIds.values() AND StartDateTime >: system.now()];
         }
         system.debug('LosingOppOpenTasks=============='+LosingOppOpenTasks);
         system.debug('LosingOppOpenEvents=============='+LosingOppOpenEvents);
@@ -913,6 +913,8 @@ public class opportunityValidateAndMerge{
                 if(OppUpComingEventsMap.get(WinLosOppIds.get(opp.id)).size()>0){
                     for(Event e:OppUpComingEventsMap.get(WinLosOppIds.get(opp.id))){
                         e.WhatId = opp.id;
+                        e.OwnerId = opp.OwnerId;
+                        //e.WhoId = opp.Primary_Contact__c;
                         FinalOppEventsToUpdate.add(e);
                     }
                 }
@@ -947,6 +949,8 @@ public class opportunityValidateAndMerge{
                 if(OppOpenTasksMap.get(WinLosOppIds.get(opp.id)).size()>0){
                     for(Task t:OppOpenTasksMap.get(WinLosOppIds.get(opp.id))){
                         t.WhatId = opp.id;
+                        //t.WhoId = opp.Primary_Contact__c;
+                        t.OwnerId = opp.OwnerId;
                         finalTasksToUpdate.add(t);
                     }
                 }
@@ -1256,13 +1260,16 @@ public class opportunityValidateAndMerge{
             Map<String,List<String>> ErrorsMap = new Map<String,List<String>>();
         //Query on oles related to losing opportunities
         if(WinLosOppIds!=null && !WinLosOppIds.isEmpty()){
-            losingOppOleMap = new Map<id,Online_Enrollment__c>([Select id,Opportunity_Id__c,Opportunity_Status__c from Online_Enrollment__c where Opportunity_Id__c IN:WinLosOppIds.values() AND Opportunity_Status__c = 'Open']);
+            //losingOppOleMap = new Map<id,Online_Enrollment__c>([Select id,Opportunity_Id__c,Opportunity_Status__c from Online_Enrollment__c where Opportunity_Id__c IN:WinLosOppIds.values() AND Opportunity_Status__c ='Open']);
+            losingOppOleMap = new Map<id,Online_Enrollment__c>([Select id,Opportunity_Id__c,Opportunity_Status__c from Online_Enrollment__c where Opportunity_Id__c IN:WinLosOppIds.values()]);
         }
         system.debug('losingOppOleMap==========='+losingOppOleMap);
         if(losingOppOleMap!=null && !losingOppOleMap.isEmpty() && mergedWinOppMap!=null && !mergedWinOppMap.isEmpty()){
             system.debug('winning opps ');
             for(Opportunity opp:mergedWinOppMap.values()){
                 system.debug('Winning opp values for OLE');
+
+                system.debug('WinLosOppIds.get(opp.id)----------'+WinLosOppIds.get(opp.id));
                  system.debug('mergedLosingOppMap.get(WinLosOppIds.get(opp.id)).Online_Enrollment__c'+mergedLosingOppMap.get(WinLosOppIds.get(opp.id)).Online_Enrollment__c);
                 //If losing opportunity's online enrollment field is not null then update that OLE opp id
                 if(String.isNotBlank(mergedLosingOppMap.get(WinLosOppIds.get(opp.id)).Online_Enrollment__c) && losingOppOleMap.containsKey(mergedLosingOppMap.get(WinLosOppIds.get(opp.id)).Online_Enrollment__c)){
