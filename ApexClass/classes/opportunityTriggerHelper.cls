@@ -50,7 +50,7 @@ public class opportunityTriggerHelper{
             if(opp.PickUp_or_Ship_Kit__c == 'Ship' && String.isBlank(opp.Ship_To_Zip_Code__c)){ 
                 Trigger.new[0].addError('Please Enter Ship to Zip Code');
             }
-           
+          
         }
         system.debug('oppIdSet000000000000'+oppIdSet);
        if(oppIdSet!=null && !oppIdSet.isEmpty()){
@@ -67,42 +67,84 @@ public class opportunityTriggerHelper{
             }else{
                 Trigger.new[0].addError('Please Enter Primary Provider');
             }
-            List<OpportunityContactRole> contactRoleList = [SELECT ContactId,Role,Contact.MailingStreet,Contact.MailingCountry,Contact.Birthdate,Contact.Email,Contact.ID_Information__c,Contact.ID_Type__c,Contact.Phone, OpportunityId, Id FROM OpportunityContactRole Where isPrimary=true and OpportunityId In : oppIdSet];
-            Set<Id> contactIdSet = new Set<Id>();
-            if(contactRoleList!=null && !contactRoleList.isEmpty()){
-                for(OpportunityContactRole crole : contactRoleList){
-                    if(crole.ContactId != null && crole.Role == 'Mother'){
-                        if(!Test.isRunningTest() && crole.Contact.MailingStreet == null){    
-                            Trigger.new[0].addError('Please Enter Primary Address');
+            //Check atleast one mother contactRole on opportunity
+            List<OpportunityContactRole> contactRoleList = [SELECT ContactId,IsPrimary,Role,Contact.MailingStreet,Contact.MailingCountry,Contact.Birthdate,Contact.Email,Contact.ID_Information__c,Contact.ID_Type__c,Contact.Phone, OpportunityId, Id FROM OpportunityContactRole Where OpportunityId In : oppIdSet];
+            Map<Id,List<OpportunityContactRole>> oppContactRolesMap = new Map<id,List<OpportunityContactRole>>();
+            if(!contactRoleList.isEmpty()){
+                for(OpportunityContactRole ocr:contactRoleList){
+                    List<OpportunityContactRole> tempList = new List<OpportunityContactRole>();
+                    tempList = oppContactRolesMap.get(ocr.OpportunityId);
+                    if(tempList == null){
+                        oppContactRolesMap.put(ocr.OpportunityId,new List<OpportunityContactRole>{ocr});
+                    }
+                    else{
+                        tempList.add(ocr);
+                        oppContactRolesMap.put(ocr.Opportunityid,tempList);
+                    }
+                }    
+            }
+            Map<id,OpportunityContactRole> oppContactRoleMap = new Map<id,OpportunityContactRole>();
+            if(!oppContactRolesMap.isEmpty()){
+                //Check mother contact role
+                for(Opportunity opp:oppList){
+                    if(oppContactRolesMap.containsKey(opp.id)){
+                        Boolean hasMotherRole = false;
+
+                        for(OpportunityContactRole ocr:oppContactRolesMap.get(opp.id)){
+                             if(ocr.Role == 'Mother'){
+                                     hasMotherRole = true;
+                                }
+                                if(ocr.IsPrimary){
+                                    oppContactRoleMap.put(opp.id,ocr);
+                                }
                         }
-                        if(!Test.isRunningTest() && crole.Contact.MailingCountry == null){    
-                            Trigger.new[0].addError('Please Enter Primary Country');
+                        if(!hasMotherRole){
+                            opp.addError('Please Add Mother Contact Role');
                         }
-                        if(!Test.isRunningTest() && crole.Contact.Birthdate == null){    
-                            Trigger.new[0].addError('Please Enter Primary Contact Date Of Birth');
-                        }
-                        if(!Test.isRunningTest() && crole.Contact.Email == null){    
-                            Trigger.new[0].addError('Please Enter Primary Contact Email');
-                        }
-                        if(!Test.isRunningTest() && crole.Contact.ID_Information__c == null){
-                            Trigger.new[0].addError('Please Enter Primary Contact ID Information');
-                        }
-                        if(!Test.isRunningTest() && crole.Contact.ID_Type__c == null){
-                            Trigger.new[0].addError('Please Enter Primary Contact ID Type');
-                        }
-                        if(!Test.isRunningTest() && crole.Contact.Phone == null){    
-                            Trigger.new[0].addError('Please Enter Primary Contact Phone');
-                        }  
+                    }
+                    else{
+                        opp.addError('Please Add Mother Contact Role');
                     }
                 }
+              
+                    for(Opportunity opp:oppList){
+                        if(!oppContactRoleMap.isEmpty() && oppContactRoleMap.containsKey(opp.id)){
+                            OpportunityContactRole ocr = oppContactRoleMap.get(opp.id);
+                            if(String.isBlank(ocr.Contact.MailingStreet)){
+                                opp.addError('Please Enter Primary Address');
+                            }
+                             if(String.isBlank(ocr.Contact.MailingCountry)){
+                                opp.addError('Please Enter Primary Country');
+                            }
+                            if(ocr.Contact.Birthdate == null){
+                                opp.addError('Please Enter Primary Contact Date Of Birth');
+                            }
+                            if(ocr.Contact.Email==null){
+                                opp.addError('Please Enter Primary Contact Email');
+                            }
+                            if(String.isBlank(ocr.Contact.ID_Information__c)){
+                                opp.addError('Please Enter Primary Contact ID Information');
+                            }
+                             if(String.isBlank(ocr.Contact.ID_Type__c)){
+                                opp.addError('Please Enter Primary Contact ID Type');
+                            }
+                             if(ocr.Contact.Phone == null){
+                                opp.addError('Please Enter Primary Contact Phone');
+                            }
+                        }
+                        else{
+                            opp.addError('Please add a primary contact');
+                        }
+                    }
             }
-           
+         
         }
         
     }
+   
     //by using this method update kit order Information CBRSFDC8-147
     public static void updateKitOrderInformation(List<Opportunity> oppList){
-        
+        Shipping_Cost__mdt[] custMeta;
         Set<Id> conIdSet = new Set<Id>();
         Map<Id,Id> oppConMap = new Map<Id,Id>();
         for(Opportunity opp :oppList){
@@ -114,22 +156,38 @@ public class opportunityTriggerHelper{
             if(dueDate!=null)
             numberDaysDue = startDate.daysBetween(dueDate);
             
-            if(opp.of_Babies__c == 'Single' && opp.PickUp_or_Ship_Kit__c == 'Ship' && numberDaysDue <= 30){
+         /*   if(opp.of_Babies__c == 'Single' && opp.PickUp_or_Ship_Kit__c == 'Ship' && numberDaysDue <= 30){
                 opp.Shipping_Method__c = 'Priority Overnight';
-            }
+            }   
             if(opp.of_Babies__c == 'Single'  && opp.PickUp_or_Ship_Kit__c == 'Ship' && numberDaysDue > 30){
                 opp.Shipping_Method__c = 'Second day';
             }
-            if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue <= 60) && (opp.PickUp_or_Ship_Kit__c == 'Ship' )){
+            if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets	' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue <= 60) && (opp.PickUp_or_Ship_Kit__c == 'Ship' )){
                 opp.Shipping_Method__c = 'Priority Overnight';
             }
             if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue >= 60)&& (opp.PickUp_or_Ship_Kit__c == 'Ship')){
                 opp.Shipping_Method__c = 'Second day';
-            }
+            }*/
+            
+            // Use custom meta data type Shipping_Method_mdt instead of hardcoding values.
+            Shipping_Method__mdt[] shipMethods = [SELECT MasterLabel, DeveloperName,of_Babies__c,PickUp_or_Ship_Kit__c,Operator__c,NumberDaysDue__c,Shipping_Method__c FROM Shipping_Method__mdt];
+            system.debug('ShipMethods==============>'+ shipMethods);
+            
+            for (Shipping_Method__mdt sm: shipMethods) {
+
+                if( opp.of_Babies__c == sm.of_Babies__c && opp.PickUp_or_Ship_Kit__c == sm.PickUp_or_Ship_Kit__c && numberDaysDue <= sm.NumberDaysDue__c && sm.Operator__c == '<='){ 
+                    opp.Shipping_Method__c = sm.Shipping_Method__c; 
+                }
+                else if( opp.of_Babies__c == sm.of_Babies__c && opp.PickUp_or_Ship_Kit__c == sm.PickUp_or_Ship_Kit__c && sm.Operator__c == '>' &&  numberDaysDue > sm.NumberDaysDue__c){ 
+                    opp.Shipping_Method__c = sm.Shipping_Method__c; 
+                }                 
+
+            }            
+            
             if(opp.Requested_Shipping_Date__c == Null || opp.Requested_Shipping_Date__c != Null){
                 opp.Requested_Shipping_Date__c = system.Today();
             }
-            if(opp.Requested_Shipping_Method__c == null){
+           /* if(opp.Requested_Shipping_Method__c == null){
                 opp.Amount = 0;
                 opp.Total_Expedited_Shipping_Cost__c = 0;
                 opp.Saturday_Delivery__c = false;
@@ -165,8 +223,17 @@ public class opportunityTriggerHelper{
             if(opp.Saturday_Delivery__c == true && opp.Requested_Shipping_Method__c == 'Courier' && opp.Signature_Required__c == true){
                  opp.Amount = 125;
                  opp.Total_Expedited_Shipping_Cost__c = 150;
+            }*/
+            Shipping_Cost__mdt[] shipCosts = [SELECT MasterLabel, DeveloperName,Requested_Shipping_Method__c,Saturday_Delivery__c,Signature_Required__c, Amount__c ,Total_Expedited_Shipping_Cost__c FROM Shipping_Cost__mdt];
+            system.debug('ShipCosts==============>'+ shipCosts);
+            for (Shipping_Cost__mdt s: shipCosts) { 
+                if(opp.Requested_Shipping_Method__c == s.Requested_Shipping_Method__c && opp.Saturday_Delivery__c == s.Saturday_Delivery__c && opp.Signature_Required__c == s.Signature_Required__c){
+                   opp.Amount = s.Amount__c;
+                   opp.Total_Expedited_Shipping_Cost__c = s.Total_Expedited_Shipping_Cost__c;
+                }
             }
-            
+            System.debug('opp.Amount===>'+opp.Amount);
+            System.debug('opp.Total_Expedited_Shipping_Cost===>'+opp.Total_Expedited_Shipping_Cost__c);
             
         }
         //Map<Id,Contact>  conMap  = new Map<Id,Contact>([Select Id,Name,Primary_Address__c,Timezone__c,MailingStreet, MailingCity, MailingState, MailingCountry, MailingPostalCode,Primary_Contact_Phone__c,Phone From Contact Where Id In:oppConMap.values()]);        
@@ -176,18 +243,7 @@ public class opportunityTriggerHelper{
                if(String.isNotBlank(opp.Primary_Contact__c)){ 
                    if(oppConMap!=null && !oppConMap.isEmpty() && oppConMap.containskey(opp.Id)){
                        if(conMap.containskey(oppConMap.get(opp.Id))){
-                           /* String conAddress ='';
-                            if(String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).MailingStreet) || String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).MailingCity) || String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).MailingState) || String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).MailingCountry)){
-                                conAddress = conMap.get(oppConMap.get(opp.Id)).MailingStreet+ '  '  +conMap.get(oppConMap.get(opp.Id)).MailingCity+ '  ' +conMap.get(oppConMap.get(opp.Id)).MailingState+ '  ' +conMap.get(oppConMap.get(opp.Id)).MailingCountry;
-                            }
-                           if(opp.Ship_To_Name__c == null)
-                               if(String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).Name)){opp.Ship_To_Name__c = conMap.get(oppConMap.get(opp.Id)).Name;}
-                           if(opp.Ship_To_Street1__c== null)
-                               opp.Ship_To_Street1__c= conAddress;
-                           if(opp.Ship_To_Phone__c == null)
-                           if(String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).Phone)){opp.Ship_To_Phone__c = conMap.get(oppConMap.get(opp.Id)).Phone;}
-                           // By using this line it will update Primary contact time zone on opportunity detail page
-                           if(String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).Timezone__c)){opp.Clients_Time_Zone__c = conMap.get(oppConMap.get(opp.Id)).Timezone__c;}*/
+                          
                            if(String.isNotBlank(conMap.get(oppConMap.get(opp.Id)).MailingStreet) && String.isBlank(opp.Ship_To_Street1__c)){
                                 opp.Ship_To_Street1__c= conMap.get(oppConMap.get(opp.Id)).MailingStreet;
                            }
