@@ -1,7 +1,7 @@
 /******************************************************************************************************************************
 Component Name: OpportunityTriggerHelperTest
 Description   : Test class for opportunityTriggerHelper.
-Developed By  : TEKsystems
+Developed By  : TEK Systems
 *******************************************************************************************************************************/
 
 @isTest
@@ -75,7 +75,7 @@ public class OpportunityTriggerHelperTest{
     }
     @isTest static void testMethod2(){
         Test.StartTest();try{
-            Opportunity opp = new Opportunity(name = 'Test1',of_Babies__c = 'Single',                                             StageName = 'Ask for sale (7)',PickUp_or_Ship_Kit__c = 'Ship',closeDate = system.today(),status__C = 'Enrolled',Due_Date__c = system.today().addDays(42));
+            Opportunity opp = new Opportunity(name = 'Test1',of_Babies__c = 'Single', StageName = 'Ask for sale (7)',PickUp_or_Ship_Kit__c = 'Ship',closeDate = system.today(),status__C = 'Enrolled',Due_Date__c = system.today().addDays(42));
             insert opp;
             //Query on contact
             Contact con = [Select id from Contact LIMIT 1];
@@ -90,13 +90,12 @@ public class OpportunityTriggerHelperTest{
         
         Test.StopTest();
     }
+    //testMethod to check opp stagename is Rapport and Education (5) when Manual Lead is converted
     @isTest static void testMethod3(){
         Test.StartTest();
         Id ManualLeadRecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('Manual Lead').getRecordTypeId();
-        Id MQLRecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('MQL').getRecordTypeId();
         List<Lead> leadList = new List<Lead>();
-         Lead MQLLead=new Lead(LastName='Joe',FirstName='James',Company='Test',Status='New',LeadSource='Internet',RecordTypeid=MQLRecordTypeId,Due_Date__c=system.today(),Email='test222@gmail.com');
-         leadList.add(MQLLead);
+         
          Lead manualLead=new Lead(LastName='Doe',FirstName='John',Company='Test',Status='Manually Qualified',LeadSource='Phone',RecordTypeid=ManualLeadRecordTypeId,Due_Date__c=system.today(),Email='test111@gmail.com');
          leadList.add(manualLead);
 
@@ -117,25 +116,8 @@ public class OpportunityTriggerHelperTest{
         //Check opportunity stage is  Rapport and Education (5)
         system.assertEquals(opp.StageName,'Rapport and Education (5)');
 
-         //COnvert Lead
-        Database.LeadConvert lc1 = new database.LeadConvert();
-        lc1.setLeadId(MQLLead.id);
-        lc1.setconvertedStatus(convertStatus.MasterLabel);
-        lc1.setDoNotCreateOpportunity(false);
-        
-        Database.LeadConvertResult lcr1 = Database.convertLead(lc1);
-        //Get id of opportunity which is created on conversion of lead
-        id oppMQLLeadId = lcr1.getOpportunityId();
-        //with the above opp id query on opportunity
-        Opportunity opp1 =[select id,StageName,Lead_RecordType_Name__c from opportunity where id =:oppMQLLeadId];
-        system.debug('opp1========'+opp1);
-        //Check opportunity stage is  Marketing Qualified (4)
-        system.assertEquals(opp1.StageName,'Marketing Qualified (4)');
         Test.Stoptest();
-        opportunity oppCSSReferral = new opportunity(name = 'Test1',of_Babies__c = 'Single',                                        StageName = 'Ask for sale (7)',PickUp_or_Ship_Kit__c = 'Ship',closeDate = system.today(),status__C = 'Enrolled',Due_Date__c = system.today().addDays(42),LeadSource = 'CSS Referral');
-        insert oppCSSReferral;
-        opportunity oppCss = [Select id,StageName from Opportunity where id =:oppCSSReferral.id];
-        system.assertEquals(oppCss.StageName,'Marketing Qualified (4)');
+       
     }
     //testMethod5 is to check opp is created when OLE is created and opp's id is updated on OLE
     @isTest static void testMethod4(){
@@ -163,12 +145,19 @@ public class OpportunityTriggerHelperTest{
               oe1.Primary_ID_Type__c = 'Passport #';
               oe1.PrimaryID__c = '1234554454677';
               //Insert OLE
-              insert oe1;
+              
+              try{
+                insert oe1;
+              }catch(Exception e){
+                system.debug('Error during OnlineEnrollment record insertion'+e.getMessage());
+              }
+
               opportunity opp = [Select id,Online_Enrollment__c from  Opportunity Where Online_Enrollment__c =:oe1.id];
               Online_Enrollment__c ole = [Select id,Opportunity_Id__c from Online_Enrollment__c];
               system.assertEquals(ole.Opportunity_Id__c,opp.id);
         Test.StopTest();
     }
+    //check to see if the manager field is updated with user who is above the user in role hierarchy
     @isTest static void testMethod5(){
         Test.StartTest();
         UserRole usr = [Select id,name from UserRole where Name = 'Sales Rep NSCE 1' ];
@@ -245,7 +234,162 @@ public class OpportunityTriggerHelperTest{
             
             Opportunity oppNew = [Select id,Manager__r.UserRoleId,OwnerId from opportunity where id =:Oppty.id];
             System.assertEquals(usr1.Id, oppNew.Manager__r.UserRoleId);
-        Test.Stoptest();
+            Test.Stoptest();
+        }
     }
-}
+    // Update the City and Zip based on the Zipcode && country provided
+    private static testMethod void testMethod6(){
+        // create US_Zipcode__c
+        US_Zipcode__c zipObj = new US_Zipcode__c();
+        zipObj.Name = '85281';
+        zipObj.City__c = 'Tempe';
+        zipObj.Country__c = 'United States';
+        zipObj.State__c = 'AZ';
+        insert zipObj;
+        
+        // Create Opportunity
+        Opportunity op1 = new Opportunity();
+        op1.name = 'Opportunity Zipcode Update Test';
+        op1.CloseDate =  system.today().addDays(24);
+        op1.StageName = 'Overcoming Objections (6)';
+        op1.PickUp_or_Ship_Kit__c = 'Ship';
+        
+        op1.Ship_To_Phone__c = '9999999999';
+        op1.Requested_Shipping_Date__c = system.today();
+        op1.Ship_To_Name__c = 'Test';
+        op1.Ship_To_Street1__c = 'Test Address';
+        op1.Ship_To_Zip_Code__c = '85281';
+        op1.Ship_To_Country__c = 'United States';
+        op1.Ship_To_Phone__c = '9999999999';
+        op1.Primary_Source__c = 'Advertising (Magazine, Internet)';
+        op1.Shipping_Method__c = 'Priority Overnight';
+        op1.LeadSource = 'Chat';
+        insert op1;
+         
+        op1.Ship_To_Zip_Code__c = '85281';
+        
+        Test.StartTest();
+        update op1;
+        Opportunity oppNew = [Select id,Ship_To_City__c,Ship_To_State__c from opportunity where id =:Op1.id];
+        system.assertEquals('Tempe', oppNew.Ship_To_City__c);
+        system.assertEquals('AZ', oppNew.Ship_To_State__c);
+
+        Test.stopTest();
+    }    
+
+    // For an opportunity that is not created from online enrollment, When the opp status is updated won, check to see if the opp has more than one contact role as mother, prevent the user from updating the opp.
+    private static testMethod void testMethod7(){
+        
+        // Create Opportunity
+        Opportunity op1 = new Opportunity();
+        op1.name = 'Opportunity Zipcode Update Test';
+        op1.CloseDate =  system.today().addDays(24);
+        op1.StageName = 'Overcoming Objections (6)';
+        op1.PickUp_or_Ship_Kit__c = 'Ship';
+        op1.Ship_To_Phone__c = '9999999999';
+        op1.Requested_Shipping_Date__c = system.today();
+        op1.Ship_To_Name__c = 'Test';
+        op1.Ship_To_Street1__c = 'Test Address';
+        op1.Ship_To_State__c = 'Arizona';
+        op1.Ship_To_City__c = 'Tempe';
+        op1.Ship_To_Zip_Code__c = '85281';
+        op1.Ship_To_Country__c = 'United States';
+        op1.Ship_To_Phone__c = '9999999999';
+        op1.Primary_Source__c = 'Advertising (Magazine, Internet)';
+        op1.Shipping_Method__c = 'Priority Overnight';
+        op1.LeadSource = 'Chat';
+        insert op1;
+
+        List<Contact> contList = new List<Contact>();
+        contList.add(new Contact(FirstName = 'Samurai', LastName = 'Yellow',Birthdate = System.today().addDays(-100),Phone='1232431234',ID_Type__c = 'Passport #',ID_Information__c = '545465656555',Email = 'test1511@test.com',MailingCountry = 'United States',MailingState = 'Arizona',MailingCity = 'Tempe',MailingPostalCode='85281',MailingStreet = 'Testmst'));
+        contList.add(new Contact(FirstName = 'Spartan', LastName = 'Red',Birthdate = System.today().addDays(-50),Phone = '8900988900',ID_Type__c = 'Passport #',ID_Information__c = '234756768758',Email = 'test2252@test.com',MailingCountry = 'United States',MailingState = 'Arizona',MailingCity = 'Tempe',MailingPostalCode='85281',MailingStreet = 'mstmst'));
+        insert contList;
+
+        List<OpportunityContactRole> OCRList = new List<OpportunityContactRole>();
+        OCRList.add(new OpportunityContactRole(ContactId = contList[0].id,Role = 'Mother',IsPrimary = true,OpportunityId = op1.id));
+        OCRList.add(new OpportunityContactRole(ContactId = contList[1].id,Role = 'Mother',IsPrimary = true,OpportunityId = op1.id));
+        insert OCRList;
+        op1.StageName = 'Won (9)';
+        
+        Test.StartTest();
+        // update op1;
+           try{
+                update op1;
+            }catch(Exception e){
+                Boolean expectedExceptionThrown =  e.getMessage().contains('Opportunity can contain only one Mother') ? true : false;
+                System.assertEquals(expectedExceptionThrown, true);
+            }
+        Test.stopTest();
+
+    } 
+ @isTest static void testMethod8(){
+        Test.StartTest();
+        //Query on opportunity which is created in setup method
+ try{       Opportunity opp = [Select id,Description,Due_Date__c,Delivering_Hospital__c,LeadSource,Primary_Source__c,PickUp_or_Ship_Kit__c,Ship_To_Phone__c,Shipping_Method__c,Requested_Shipping_Date__c,Ship_To_Name__c,Ship_To_Street1__c,Ship_To_City__c,Ship_To_State__c,Ship_To_Zip_Code__c,Requested_Shipping_Method__c  from Opportunity];
+        //Query on facility object
+        Facility__c faclity = [Select id from Facility__c];
+        //Query on contact
+        Contact con = [Select id from Contact LIMIT 1];
+        //Query on provider
+        Provider__c provObj = [Select id from Provider__c];
+        //Query on provider facility
+        Provider_Facility__c pfRec = [Select id from Provider_Facility__c];
+        //create primary opportunity contact role woth mother role 
+        OpportunityContactRole ocr = new OpportunityContactRole(ContactId = con.id,Role = 'Mother',IsPrimary = true,OpportunityId = opp.id);
+        insert ocr;
+        Opportunity opp1 = new Opportunity(name = 'Test1',of_Babies__c = 'Single', StageName = 'Ask for sale (7)',PickUp_or_Ship_Kit__c = 'Ship',closeDate = system.today(),status__C = 'Open',Due_Date__c = system.today().addDays(42));
+            insert opp1;
+            opp1.Status__c = 'Closed_Lost';
+            opp1.Loss_Reason__c = 'OFAC/SDNL';
+            update opp1;
+            OpportunityContactRole ocr1 = new OpportunityContactRole(ContactId = con.id,Role = 'Unkown',IsPrimary = true,OpportunityId = opp1.id);
+        insert ocr1;
+        //create opportunity provider 
+        Opportunity_Provider__c oppProviderObj = new Opportunity_Provider__c();
+        oppProviderObj.Provider__c = provObj.Id;
+        oppProviderObj.Opportunity__c = opp.id;
+        oppProviderObj.Primary_Provider__c = true;
+        oppProviderObj.Facility__c = faclity.id;
+        oppProviderObj.Delivering_Provider__c = true;
+        oppProviderObj.Provider_Facility__c = pfRec.id;
+        Insert oppProviderObj;
+
+        //update opp stage to won
+        opp.Delivering_Hospital__c = faclity.id;
+        opp.LeadSource = 'Other';
+        opp.Primary_Source__c = 'Other';
+        opp.Requested_Shipping_Method__c = 'Priority Overnight';
+        opp.StageName = 'Won (9)';
+        update opp;
+        system.assertEquals(opp.StageName,'Won (9)');
+
+        Test.StopTest();
+    }catch( Exception e){}
+    }
+    //TestMethod to check opp's StageName is Marketing Qualified (4) when a lead whose recordtype is MQL is converted
+   @isTest static void testMethod9(){
+    Test.StartTest();
+        Id MQLRecordTypeId = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('MQL').getRecordTypeId();
+        List<Lead> leadList = new List<Lead>();
+         Lead MQLLead=new Lead(LastName='Joe',FirstName='James',Company='Test',Status='New',LeadSource='Internet',RecordTypeid=MQLRecordTypeId,Due_Date__c=system.today(),Email='test222@gmail.com');
+         leadList.add(MQLLead);
+        insert leadList;
+         //COnvert Lead
+        Database.LeadConvert lc1 = new database.LeadConvert();
+        lc1.setLeadId(MQLLead.id);
+         leadStatus convertStatus = [SELECT Id, MasterLabel FROM LeadStatus WHERE IsConverted=true LIMIT 1];
+        lc1.setconvertedStatus(convertStatus.MasterLabel);
+        lc1.setDoNotCreateOpportunity(false);
+        
+        Database.LeadConvertResult lcr1 = Database.convertLead(lc1);
+        //Get id of opportunity which is created on conversion of lead
+        id oppMQLLeadId = lcr1.getOpportunityId();
+        //with the above opp id query on opportunity
+        Opportunity opp1 =[select id,StageName,Lead_RecordType_Name__c from opportunity where id =:oppMQLLeadId];
+        system.debug('opp1========'+opp1);
+        //Check opportunity stage is  Marketing Qualified (4)
+        system.assertEquals(opp1.StageName,'Marketing Qualified (4)');
+    Test.StopTest();
+   }
+  
 }

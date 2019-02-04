@@ -55,6 +55,7 @@ public class opportunityTriggerHelper{
         system.debug('oppIdSet000000000000'+oppIdSet);
        if(oppIdSet!=null && !oppIdSet.isEmpty()){
            system.debug('oppIdSet0000000000009999'+oppIdSet);
+           //Logic to check Primary provider for enrolled opportunity
            List<Opportunity_Provider__c> oppProviderList = [Select Id,Name,Primary_Provider__c,Facility__c, Provider_Facility__c,Opportunity__c From Opportunity_Provider__c Where Primary_Provider__c = true and Opportunity__c IN :oppIdSet]; 
            system.debug(oppProviderList );
             if(oppProviderList.size() >0){
@@ -70,7 +71,7 @@ public class opportunityTriggerHelper{
             //Check atleast one mother contactRole on opportunity
             List<OpportunityContactRole> contactRoleList = [SELECT ContactId,IsPrimary,Role,Contact.MailingStreet,Contact.MailingCountry,Contact.Birthdate,Contact.Email,Contact.ID_Information__c,Contact.ID_Type__c,Contact.Phone, OpportunityId, Id FROM OpportunityContactRole Where OpportunityId In : oppIdSet];
             Map<Id,List<OpportunityContactRole>> oppContactRolesMap = new Map<id,List<OpportunityContactRole>>();
-            if(!contactRoleList.isEmpty()){
+            if(contactRoleList!=null && !contactRoleList.isEmpty()){
                 for(OpportunityContactRole ocr:contactRoleList){
                     List<OpportunityContactRole> tempList = new List<OpportunityContactRole>();
                     tempList = oppContactRolesMap.get(ocr.OpportunityId);
@@ -84,58 +85,93 @@ public class opportunityTriggerHelper{
                 }    
             }
             Map<id,OpportunityContactRole> oppContactRoleMap = new Map<id,OpportunityContactRole>();
+            Map<id,id> OppIdPrimaryContactIdMap = new Map<Id,Id>();//This map holds opp id as key and its primary contact's id as value
+            Integer count = 0;
             if(!oppContactRolesMap.isEmpty()){
-                //Check mother contact role
+                //Check mother contact role if not present error is displayed or if there are more than 1 mother role error is displayed
                 for(Opportunity opp:oppList){
                     if(oppContactRolesMap.containsKey(opp.id)){
                         Boolean hasMotherRole = false;
 
                         for(OpportunityContactRole ocr:oppContactRolesMap.get(opp.id)){
-                             if(ocr.Role == 'Mother'){
-                                     hasMotherRole = true;
-                                }
-                                if(ocr.IsPrimary){
-                                    oppContactRoleMap.put(opp.id,ocr);
-                                }
+                            if(ocr.Role == 'Mother'){
+                                hasMotherRole = true;
+                                count++;
+                            }
+                            if(ocr.IsPrimary){
+                                oppContactRoleMap.put(opp.id,ocr);
+                                OppIdPrimaryContactIdMap.put(opp.id,ocr.ContactId);
+                            }
                         }
                         if(!hasMotherRole){
                             opp.addError('Please Add Mother Contact Role');
+                        }
+                        //Number of ContactRoles with mother 
+                        if( count >1){
+                            opp.addError('Opportunity can contain only one Mother');
                         }
                     }
                     else{
                         opp.addError('Please Add Mother Contact Role');
                     }
                 }
-              
-                    for(Opportunity opp:oppList){
-                        if(!oppContactRoleMap.isEmpty() && oppContactRoleMap.containsKey(opp.id)){
-                            OpportunityContactRole ocr = oppContactRoleMap.get(opp.id);
-                            if(String.isBlank(ocr.Contact.MailingStreet)){
-                                opp.addError('Please Enter Primary Address');
-                            }
-                             if(String.isBlank(ocr.Contact.MailingCountry)){
-                                opp.addError('Please Enter Primary Country');
-                            }
-                            if(ocr.Contact.Birthdate == null){
-                                opp.addError('Please Enter Primary Contact Date Of Birth');
-                            }
-                            if(ocr.Contact.Email==null){
-                                opp.addError('Please Enter Primary Contact Email');
-                            }
-                            if(String.isBlank(ocr.Contact.ID_Information__c)){
-                                opp.addError('Please Enter Primary Contact ID Information');
-                            }
-                             if(String.isBlank(ocr.Contact.ID_Type__c)){
-                                opp.addError('Please Enter Primary Contact ID Type');
-                            }
-                             if(ocr.Contact.Phone == null){
-                                opp.addError('Please Enter Primary Contact Phone');
-                            }
+                for(Opportunity opp:oppList){
+                    if(!oppContactRoleMap.isEmpty() && oppContactRoleMap.containsKey(opp.id)){
+                        OpportunityContactRole ocr = oppContactRoleMap.get(opp.id);
+                        if(String.isBlank(ocr.Contact.MailingStreet)){
+                            opp.addError('Please Enter Primary Address');
                         }
-                        else{
-                            opp.addError('Please add a primary contact');
+                        if(String.isBlank(ocr.Contact.MailingCountry)){
+                            opp.addError('Please Enter Primary Country');
+                        }
+                        if(ocr.Contact.Birthdate == null){
+                            opp.addError('Please Enter Primary Contact Date Of Birth');
+                        }
+                        if(ocr.Contact.Email==null){
+                            opp.addError('Please Enter Primary Contact Email');
+                        }
+                        if(String.isBlank(ocr.Contact.ID_Information__c)){
+                            opp.addError('Please Enter Primary Contact ID Information');
+                        }
+                        if(String.isBlank(ocr.Contact.ID_Type__c)){
+                            opp.addError('Please Enter Primary Contact ID Type');
+                        }
+                        if(ocr.Contact.Phone == null){
+                            opp.addError('Please Enter Primary Contact Phone');
                         }
                     }
+                    else{
+                        opp.addError('Please add a primary contact');
+                        }
+                }
+                //Logic to check if enrolling opp's primary contact is associated with already closed opportunity with loss reason = 'OFAC/SDNL' 
+                Map<id,OpportunityContactRole> OCRMap = new Map<Id,OpportunityContactRole>();
+                if(OppIdPrimaryContactIdMap!=null && !OppIdPrimaryContactIdMap.isEmpty()){
+                    System.debug('OppIdPrimaryContactIdMap======================> '+OppIdPrimaryContactIdMap);
+                 
+                    //Creating Map with OppContactRole id as key and OppContactRole record as value
+                    //OCRMap = new Map<Id,OpportunityContactRole>([Select id,OpportunityId,Opportunity.Status__c,Opportunity.Loss_Reason__c from OpportunityContactRole where id IN:OppIdPrimaryContactIdMap.values() AND OpportunityId NOT IN:oppIdSet AND Opportunity.Status__c = 'Closed_Lost' AND Opportunity.Loss_Reason__c = 'OFAC/SDNL']);
+                    OCRMap = new Map<Id,OpportunityContactRole>([Select id,OpportunityId,ContactId,Opportunity.Status__c,Opportunity.Loss_Reason__c from OpportunityContactRole where ContactId IN:OppIdPrimaryContactIdMap.values() AND Opportunity.Status__c = 'Closed_Lost' AND Opportunity.Loss_Reason__c = 'OFAC/SDNL']);
+                    Set<Id> OCRContactIdSet = new Set<Id>();
+                   for (OpportunityContactRole ocr : OCRMap.values()){
+                            OCRContactIdSet.add(ocr.contactId);
+                    }
+
+                    system.debug('OCRMap==========> '+ OCRMap);
+                    if(OCRMap!=null && !OCRMap.isEmpty()){
+                        for(opportunity opp:oppList){
+                            
+                           // if(OCRMap.containsKey(OppIdPrimaryContactIdMap.get(opp.id))){
+                            if(OCRContactIdSet.contains(OppIdPrimaryContactIdMap.get(opp.id))){
+                                system.debug('Opp-Name====='+ opp.name);
+
+                                opp.addError('Opportunity connot be enrolled. Please notify the manager');
+                            }
+                        }//End of for loop
+                    }
+                   
+                }
+
             }
          
         }
@@ -162,7 +198,7 @@ public class opportunityTriggerHelper{
             if(opp.of_Babies__c == 'Single'  && opp.PickUp_or_Ship_Kit__c == 'Ship' && numberDaysDue > 30){
                 opp.Shipping_Method__c = 'Second day';
             }
-            if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets	' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue <= 60) && (opp.PickUp_or_Ship_Kit__c == 'Ship' )){
+            if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets   ' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue <= 60) && (opp.PickUp_or_Ship_Kit__c == 'Ship' )){
                 opp.Shipping_Method__c = 'Priority Overnight';
             }
             if((opp.of_Babies__c == 'Twins' || opp.of_Babies__c == ' Triplets' || opp.of_Babies__c == 'Quadruplets' || opp.of_Babies__c == 'Quintuplets')  && (numberDaysDue >= 60)&& (opp.PickUp_or_Ship_Kit__c == 'Ship')){
@@ -378,9 +414,9 @@ public class opportunityTriggerHelper{
                        opp.StageName = 'Marketing Qualified (4)';
                    }
                }
-               if(opp.LeadSource == 'CSS Referral'){
+             /*  if(opp.LeadSource == 'CSS Referral'){
                    opp.StageName = 'Marketing Qualified (4)';
-               }
+               }*/
            }//End of for loop
         }
     }
@@ -430,5 +466,34 @@ public class opportunityTriggerHelper{
     }
 }
     //End of Logic for User Story 544
-   
+    // User Story 676 This method update Ship To City & Ship To State field on opportunity when Ship To Zip Code is selected
+
+    public static void OpportunityZipUpdate(List<Opportunity> opplist){
+        //get the first five digits of the PostalCode from the opp
+        set<string> left5zips = new set<string>(); 
+        for(Opportunity Opp: opplist){
+            if (opp.Ship_To_Zip_Code__c !=null && opp.Ship_To_Zip_Code__c.length()>=5){
+                left5zips.add(opp.Ship_To_Zip_Code__c.substring(0,5));
+            }     
+        } 
+
+        //query the zip_code object to get the zipcode (Name) and zone from the zip code object 
+        map<string,string> zmapCity = new map<string,string>(); 
+        map<string,string> zmapState = new map<string,string>(); 
+        for(US_Zipcode__c z :[Select name, city__c, state__c from US_Zipcode__c WHERE name IN :left5zips]){
+            zmapCity.put (z.name, z.city__c);
+            zmapState.put (z.name, z.state__c);
+        }
+        
+        for(Opportunity Opp: opplist){ 
+
+            if(Opp.Ship_To_Country__c == 'United States'&& zmapCity != null && !zmapCity.isempty() && zmapCity.containskey(opp.Ship_To_Zip_Code__c.substring(0,5))){ 
+                Opp.Ship_To_City__c=zmapCity.get(opp.Ship_To_Zip_Code__c.substring(0,5)); 
+            }
+            if(opp.Ship_To_Country__c == 'United States'&& zmapState != null && !zmapState.isempty() &&zmapState.containskey(opp.Ship_To_Zip_Code__c.substring(0,5))){ 
+                Opp.Ship_To_State__c=zmapState.get(opp.Ship_To_Zip_Code__c.substring(0,5)); 
+            }                
+        } 
+    }  
 }
+    //End of Logic for User Story 676
