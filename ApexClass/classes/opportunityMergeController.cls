@@ -25,11 +25,19 @@ public class opportunityMergeController {
     public String wOppid{get; set;}
     public String baseURL{get; set;}
     public String LOppId{get;set;}
+    public Set<String> InvalidOppErrors;//This list is used to display errors on click of merge or if selected opp is not a winning or losing opp
+    public Map<String,OpportunityMergeError__mdt> ErrorsMetaData;//This Map holds all errors
     public opportunityMergeController() {
+        List<OpportunityMergeError__mdt> ErrorsList = [SELECT MasterLabel, DeveloperName,ErrorMessage__c from OpportunityMergeError__mdt];
+        ErrorsMetaData = new Map<String,OpportunityMergeError__mdt>();
+        for(OpportunityMergeError__mdt error:ErrorsList){
+            ErrorsMetaData.put(error.MasterLabel,error);
+        }
         MergingUserId = UserInfo.getUserId();
         system.debug('User Id'+MergingUserId);
         notWinOpp = false;
         notLossOpp = false;
+        InvalidOppErrors = new Set<String>();
         winningOppty = new Opportunity();
         LosingOpty = new Opportunity();
         winningOpptyOnUI = new Opportunity();
@@ -51,22 +59,25 @@ public class opportunityMergeController {
         set<String> ApiNames = new set<String>();//If merget type is custom then selected values i.e selected fields API names are added to this Set
         wrapperList = new List<WrapperClass>();//values are added to wrapperclass variables
         //After merge button is clicked we check weather selected opportunities are satisfied winning criteria and lossing criteria if not satisfied we display errors
-        if(notWinOpp || notLossOpp){
+        system.debug('notWinOpp-----------'+notWinOpp);
+        system.debug('notLossOpp-----'+notLossOpp);
+       /* if(notWinOpp == true || notLossOpp == true){
             //Display error if Winning Opp is not valid and losing opp is valid
-            if(notWinOpp && !notLossOpp){
+            if(notWinOpp = true && notLossOpp == false){
                 ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError1));
             }
             //Display Label.MergeError2 error if Winning opp is valid and losing Opp is not valid 
-            if(!notWinOpp && notLossOpp){
+            if(notWinOpp == false && notLossOpp == true){
                 ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError2));
             }
             //Display Label.MergeError3 error if Winning and Losing opps are not valid
-            if(notWinOpp && notLossOpp){
+            if(notWinOpp == true && notLossOpp == true){
                 ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError3));
             }
-        }
+        }*/
+
         //If valid winning  and lossing Opportunitys are selected below else if is executed
-        else if(!notWinOpp && !notLossOpp){
+       /* else if(notWinOpp == false && notLossOpp == false){
             //If winningOpptyOnUI or LosingOptyOnUI display errors on UI to select a winning opp and losing opp
             if(winningOpptyOnUI==null || LosingOptyOnUI == null){
                 if(winningOpptyOnUI==null){
@@ -116,7 +127,73 @@ public class opportunityMergeController {
                 system.debug(wrapperList);
                ErrorsList =  opportunityValidateAndMerge.validateAndMergeOpp(wrapperList);//This Method have logic to update winning opportunity and reparent child records of losing opportunity
             }
-        }       
+        }   */  
+        if(winningOpptyOnUI.id==null || LosingOptyOnUI.id == null){
+                system.debug('error11');
+                if(winningOpptyOnUI.id==null){
+                    system.debug('error12121');
+                    InvalidOppErrors.add('SelectWinOppToMerge');
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('SelectWinOppToMerge').ErrorMessage__c));
+                }
+                if(LosingOptyOnUI.id == null){
+                    system.debug('error0000');
+                    InvalidOppErrors.add('SelectLossOppToMerge');
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('SelectLossOppToMerge').ErrorMessage__c));
+                }
+            } 
+             //Follwoing else if condition is executed if winning opp and losing opp are same
+            else if(String.isNotBlank(winningOpptyOnUI.id) && String.isNotBlank(LosingOptyOnUI.id) && winningOpptyOnUI.id == LosingOptyOnUI.id){
+                InvalidOppErrors.add('WinLossOppCannotBeSame');
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('WinLossOppCannotBeSame').ErrorMessage__c));
+            }
+        if(InvalidOppErrors!=null && !InvalidOppErrors.isEmpty()){
+            List<String> tempList = new List<String>();
+            tempList.addAll(InvalidOppErrors);
+            for(String s:tempList){
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get(s).ErrorMessage__c));
+            }
+        }
+        else{
+            system.debug('else if no opps selected');
+            system.debug('winningOpptyOnUI========'+winningOpptyOnUI.id);
+            system.debug('LosingOptyOnUI=========='+LosingOptyOnUI.id);
+            //If Mergetype is custom check fields should be selected for merging opportunities
+             if(selectedValue == 'Custom' && String.isNotBlank(winningOpptyOnUI.id) && String.isNotBlank(LosingOptyOnUI.id)){
+                //If fields are not selected display error
+                system.debug('selectedFields'+selectedFields);
+                if(selectedFields==null ||selectedFields.isEmpty()){
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('CustomMergeFieldsError').ErrorMessage__c));
+                }
+                //For custom merge fields are selected below else condition is executed
+                else{
+                    //Adding selected field's API names to list 
+                    for(SelectOption s:selectedFields){
+                        ApiNames.add(s.getValue());
+                    }
+                    //Below variables are created as inputs for wrapperClass which is passed as input for merge method to merge opportunities
+                    Opportunity  winOpp = winningOpptyOnUI;
+                    Opportunity lossOpp = LosingOptyOnUI;
+                    String mergeType = 'Custom';
+                    Set<String> selectedFields = ApiNames;
+                    id MergedUserId = MergingUserId;
+                    wrapperList.add(new WrapperClass(winOpp,lossOpp,mergeType,selectedFields,MergedUserId,system.today()));
+                    system.debug(wrapperList);
+                     ErrorsList = opportunityValidateAndMerge.validateAndMergeOpp(wrapperList);//This Method have logic to update winning opportunity and reparent child records of losing opportunity
+                } 
+            }
+            //If merge type is standard below logic executes
+            else if(selectedValue == 'Standard' && String.isNotBlank(winningOpptyOnUI.id) && String.isNotBlank(LosingOptyOnUI.id)){
+                //Below variables are created as inputs for wrapperClass which is passed as input for merge method to merge opportunities
+                Opportunity  winOpp = winningOpptyOnUI;
+                Opportunity lossOpp = LosingOptyOnUI;
+                String mergeType = 'Standard';
+                set<String> selectedFields = null;
+                id MergedUserId = MergingUserId;
+                wrapperList.add(new WrapperClass(winOpp,lossOpp,mergeType,selectedFields,MergedUserId,system.today()));
+                system.debug(wrapperList);
+               ErrorsList =  opportunityValidateAndMerge.validateAndMergeOpp(wrapperList);//This Method have logic to update winning opportunity and reparent child records of losing opportunity
+            }
+        } 
         if(ErrorsList!=null || !ErrorsList.isEmpty()){
            for(String s:ErrorsList){
             //Opportunity merged Message says that opportunity is sucessfully merged.
@@ -137,7 +214,7 @@ public class opportunityMergeController {
     //get opportunity field values for selected opportunities
     public PageReference getOpportunity1(){
         Date todaysDate = system.today();
-        Set<String> loosingStatus = new Set<String>{'Open','Enrolled'};//This set is used to check if selected losing opp's status is in this set
+        Set<String> losingStatus = new Set<String>{'Open','Enrolled'};//This set is used to check if selected losing opp's status is in this set
         Set<id> oppids = new Set<id>();//selected winning opp's or losing opp's ids are added to this set and this set is used to query on opportunity object to get opps whose id in set.
         OppMap = new Map<id,opportunity>();//Queried opps are added to this Map
 
@@ -160,27 +237,55 @@ public class opportunityMergeController {
             winningOpptyOnUI = OppMap.get(winningOppty.OpportunityMerge__c);
             //Check winningOppty is winning opportunity's status is not closed
             if(winningOpptyOnUI.Status__c == 'Closed_Lost'){
-                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.OpptyMergeError1));
+                InvalidOppErrors.add('ClosedWinOppError');
+                //ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.OpptyMergeError1));
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('ClosedWinOppError').ErrorMessage__c));
                 notWinOpp = true;
             }
             //Check selected opp's due date is not null and days between created date of winning opp and today is should be less than or equal to 300 days then throw an error. If this if condition is passed then add true value to notWinOpp boolean. 
-            if(winningOpptyOnUI.Due_Date__c == null && todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date()) >= 300){
-                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.WOpptyMergeError2));
-                notWinOpp = true;
+            if(winningOpptyOnUI.Due_Date__c == null){
+                Integer val = todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date());
+                if(val < 0){
+                    val = math.abs(val);
+                }
+                if( val >= 300){
+                    InvalidOppErrors.add('DueDateNullError');
+                    //ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.WOpptyMergeError2));
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('DueDateNullError').ErrorMessage__c));
+                    notWinOpp = true;
+                }
             }
+            
             //If selected opp's due date is not null than days between today and due date should be less than or equal to 90 days
-            system.debug('days...'+todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c));
-            if(winningOpptyOnUI.Due_Date__c != null && todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c) >= 90){
-                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.WOpptyMergeError3));
-                notWinOpp = true;
+            //system.debug('days...'+todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c));
+            if(winningOpptyOnUI.Due_Date__c != null){
+                Integer daysNum = todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c);
+                if(daysNum < 0){
+                    daysNum = math.abs(daysNum);
+                }
+                if(daysNum >= 90){
+                    system.debug('debug 1 due date');
+                    InvalidOppErrors.add('DueDateNotNullError');
+                    //ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.WOpptyMergeError3));
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('DueDateNotNullError').ErrorMessage__c));
+                    notWinOpp = true;
+                }
             }
+            
             //if selected opp's status is not null and and days between today and opp's created date is less than 300 or days between today and duedate is less than 90 then selected opportunity is a winning opportunity 
-            if( winningOpptyOnUI.Status__c != 'Closed_Lost' && (( winningOpptyOnUI.Due_Date__c!=null && todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c) < 90) || todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date()) < 300)){
-                notWinOpp = false;
+            if( winningOpptyOnUI.Status__c != 'Closed_Lost' && (( winningOpptyOnUI.Due_Date__c!=null && math.abs(todaysdate.daysBetween(winningOpptyOnUI.Due_Date__c)) < 90) || math.abs(todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date())) < 300)){
+                system.debug('math.abs(todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date()))---'+math.abs(todaysdate.daysBetween(winningOpptyOnUI.CreatedDate.date())));
+                if(notWinOpp == false){
+                    notWinOpp = false;
+                }
+                system.debug('debug 2 is duedate');
             } 
             else{
-                if(!notWinOpp){
-                     ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError1));
+                if(notWinOpp == false){
+                    system.debug('not winnning opp');
+                    InvalidOppErrors.add('NoWinOpp');
+                    // ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError1));
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('NoWinOpp').ErrorMessage__c));
                     notWinOpp = true;
                 }
              }
@@ -190,25 +295,32 @@ public class opportunityMergeController {
             LosingOptyOnUI = OppMap.get(LosingOpty.OpportunityMerge__c);
             //Losing Opp cannot be closed opp
             if(LosingOptyOnUI.Status__c == 'Closed_Lost'){
-                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.LOpptyMergeError1));
+
+                //ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.LOpptyMergeError1));
+                InvalidOppErrors.add('ClosedLossOppError');
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('ClosedLossOppError').ErrorMessage__c));
                 notLossOpp = true;
             }
             //If Storage Date is not null OR Pending Date is not null following error is displayed Error message :"The losing Opportunity has already been stored.  It cannot be merged automatically." 
             if(LosingOptyOnUI.Storage_Date__c != null || LosingOptyOnUI.Pending_Date__c!=null){
-                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.LOpptyMergeError2));
+               // ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.LOpptyMergeError2));
+               InvalidOppErrors.add('StorageOrPendingDateNull');
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('StorageOrPendingDateNull').ErrorMessage__c));
                 notLossOpp = true;
             }
-            //If losing opp's status in loosingStatus and its storage date is null or pending date is null then losing opp is a valid losing opp
-            if(loosingStatus.contains(LosingOptyOnUI.Status__c) && (LosingOptyOnUI.Storage_Date__c == null || LosingOptyOnUI.Pending_Date__c==null)){
-                notLossOpp = false;
+            //Losing Opportunity's status can not be closed_lost or pending or stored
+            if(LosingOptyOnUI.Status__c != 'Closed_Lost' && !losingStatus.contains(LosingOptyOnUI.Status__c)){
+                InvalidOppErrors.add('NotLossOppStatus');
+                ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,ErrorsMetaData.get('NotLossOppStatus').ErrorMessage__c));
             }
-            //If opp is not a losing opp then set notLossOpp true.
-            else{
-                if(!notLossOpp){
-                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,Label.MergeError2));
-                    notLossOpp = true;
+            //If losing opp's status in losingStatus and its storage date is null or pending date is null then losing opp is a valid losing opp
+            if(losingStatus.contains(LosingOptyOnUI.Status__c) && (LosingOptyOnUI.Storage_Date__c == null || LosingOptyOnUI.Pending_Date__c==null)){
+                if(notLossOpp == false){
+                    notLossOpp = false;
                 }
-            } 
+            }
+
+            
         }
          return null;
     } 
@@ -254,5 +366,9 @@ public class opportunityMergeController {
         
     }
     
-    
+    public PageReference reloadPage(){
+        pageReference pg = new pageReference(ApexPages.currentPage().getURL());
+        pg.setRedirect(TRUE);
+        return pg;
+    }
 }

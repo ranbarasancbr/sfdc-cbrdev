@@ -76,49 +76,49 @@ public class opportunityValidateAndMerge{
                         if(NoOfBabysMap.get(opp.of_Babies__c)<NoOfBabysMap.get(losingOpp.of_Babies__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('of_Babies__c')))){
                             opp.of_Babies__c = losingOpp.of_Babies__c;
                         }
-                        //If Pricebook2id is null on winning opp and lossing opp have values for this field then we update winning opp's Pricebook2Id
+                        //If Pricebook2id is null on winning opp and losing opp have values for this field then we update winning opp's Pricebook2Id
                         if(String.isBlank(opp.Pricebook2Id) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Pricebook2Id')))){
                             opp.Pricebook2Id = losingOpp.Pricebook2Id;
                         }
-                         //If Payment_Plan__c is null on winning opp and lossing opp have values for this field then we update winning opp's Payment_Plan__c
+                         //If Payment_Plan__c is null on winning opp and losing opp have values for this field then we update winning opp's Payment_Plan__c
                         if(String.isBlank(opp.Payment_Plan__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Payment_Plan__c')))){
                             opp.Payment_Plan__c = losingOpp.Payment_Plan__c ;
                         }
-                         //If Payment_Method__c is null on winning opp and lossing opp have values for this field then we update winning opp's Payment_Method__c
+                         //If Payment_Method__c is null on winning opp and losing opp have values for this field then we update winning opp's Payment_Method__c
                         if(String.isBlank(opp.Payment_Method__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Payment_Method__c')))){
                             opp.Payment_Method__c = losingOpp.Payment_Method__c ;
                         }
-                         //If CB_Storage_Fee_Option__c is null on winning opp and lossing opp have values for this field then we update winning opp's CB_Storage_Fee_Option__c
+                         //If CB_Storage_Fee_Option__c is null on winning opp and losing opp have values for this field then we update winning opp's CB_Storage_Fee_Option__c
                         if(String.isBlank(opp.CB_Storage_Fee_Option__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('CB_Storage_Fee_Option__c')))){
                             opp.CB_Storage_Fee_Option__c = losingOpp.CB_Storage_Fee_Option__c ;
                         }
-                         //If CT_Storage_Fee_Option__c is null on winning opp and lossing opp have values for this field then we update winning opp's CT_Storage_Fee_Option__c
+                         //If CT_Storage_Fee_Option__c is null on winning opp and losing opp have values for this field then we update winning opp's CT_Storage_Fee_Option__c
                         if(String.isBlank(opp.CT_Storage_Fee_Option__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('CT_Storage_Fee_Option__c')))){
                             opp.CT_Storage_Fee_Option__c = losingOpp.CT_Storage_Fee_Option__c ;
                         }
-                        //If Corporate_Discount__c is null on winning opp and lossing opp have values for this field then we update winning opp's Corporate_Discount__c
+                        //If Corporate_Discount__c is null on winning opp and losing opp have values for this field then we update winning opp's Corporate_Discount__c
                         if(String.isBlank(opp.Corporate_Discount__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Corporate_Discount__c')))){
                             opp.Corporate_Discount__c = losingOpp.Corporate_Discount__c ;
                         }
-                        //If Promo_Code__c is null on winning opp and lossing opp have values for this field then we update winning opp's Promo_Code__c
+                        //If Promo_Code__c is null on winning opp and losing opp have values for this field then we update winning opp's Promo_Code__c
                         if(String.isBlank(opp.Promo_Code__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Promo_Code__c')))){
                             opp.Promo_Code__c = losingOpp.Promo_Code__c ;
                         }
-                        //If Manual_Discount__c is null on winning opp and lossing opp have values for this field then we update winning opp's Manual_Discount__c
+                        //If Manual_Discount__c is null on winning opp and losing opp have values for this field then we update winning opp's Manual_Discount__c
                         if(opp.Manual_Discount__c==null && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Manual_Discount__c')))){
                             opp.Manual_Discount__c = losingOpp.Manual_Discount__c ;
                         }
-                        //If Discount_Comments__c is null on winning opp and lossing opp have values for this field then we update winning opp's Discount_Comments__c
+                        //If Discount_Comments__c is null on winning opp and losing opp have values for this field then we update winning opp's Discount_Comments__c
                         if(String.isBlank(opp.Discount_Comments__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Discount_Comments__c')))){
                             opp.Discount_Comments__c = losingOpp.Discount_Comments__c ;
                         }
-                        //If PickUp_or_Ship_Kit__c is null on winning opp and lossing opp have values for this field then we update winning opp's PickUp_or_Ship_Kit__c
+                        //If PickUp_or_Ship_Kit__c is null on winning opp and losing opp have values for this field then we update winning opp's PickUp_or_Ship_Kit__c
                         if(String.isBlank(opp.PickUp_or_Ship_Kit__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('PickUp_or_Ship_Kit__c')))){
                             opp.PickUp_or_Ship_Kit__c = losingOpp.PickUp_or_Ship_Kit__c ;
                         }
                         system.debug('winning opp ship to name'+opp.Ship_To_Name__c);
                             system.debug('losingOpp opp ship to name'+losingOpp.Ship_To_Name__c);
-                            //If Ship_To_Name__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Name__c
+                            //If Ship_To_Name__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Name__c
                         if(String.isBlank(opp.Ship_To_Name__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Name__c')))){
                             system.debug('winning opp ship to name'+opp.Ship_To_Name__c);
                             system.debug('losingOpp opp ship to name'+losingOpp.Ship_To_Name__c);
@@ -126,57 +126,57 @@ public class opportunityValidateAndMerge{
                         }
                         system.debug('winning opp ship to Address'+opp.Ship_To_Street1__c);
                             system.debug('losingOpp opp ship to Address'+losingOpp.Ship_To_Street1__c);
-                             //If Ship_To_Street1__cis null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Street1__c
+                             //If Ship_To_Street1__cis null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Street1__c
                         if(String.isBlank(opp.Ship_To_Street1__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Street1__c')))){
                             opp.Ship_To_Street1__c= losingOpp.Ship_To_Street1__c;
                         }
-                         //If Ship_To_Street1__cis null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Street2__c
+                         //If Ship_To_Street1__cis null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Street2__c
                         if(String.isBlank(opp.Ship_To_Street2__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Street2__c')))){
                             opp.Ship_To_Street2__c= losingOpp.Ship_To_Street2__c;
                         }
-                         //If Ship_To_City__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_City__c
+                         //If Ship_To_City__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_City__c
                         if(String.isBlank(opp.Ship_To_City__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_City__c')))){
                             opp.Ship_To_City__c= losingOpp.Ship_To_City__c;
                         }
-                         //If Ship_To_State__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_State__c
+                         //If Ship_To_State__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_State__c
                         if(String.isBlank(opp.Ship_To_State__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_State__c')))){
                             opp.Ship_To_State__c= losingOpp.Ship_To_State__c;
                         }
-                         //If Ship_To_Zip_Code__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Zip_Code__c
+                         //If Ship_To_Zip_Code__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Zip_Code__c
                         if(String.isBlank(opp.Ship_To_Zip_Code__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Zip_Code__c')))){
                             opp.Ship_To_Zip_Code__c= losingOpp.Ship_To_Zip_Code__c;
                         }
-                        //If Ship_To_Country__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Country__c
+                        //If Ship_To_Country__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Country__c
                         if(String.isBlank(opp.Ship_To_Country__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Country__c')))){
                             opp.Ship_To_Country__c= losingOpp.Ship_To_Country__c;
                         }
-                        //If Ship_To_Phone__c is null on winning opp and lossing opp have values for this field then we update winning opp's Ship_To_Phone__c
+                        //If Ship_To_Phone__c is null on winning opp and losing opp have values for this field then we update winning opp's Ship_To_Phone__c
                         if(String.isBlank(opp.Ship_To_Phone__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Ship_To_Phone__c')))){
                             opp.Ship_To_Phone__c = losingOpp.Ship_To_Phone__c ;
                         }
                         system.debug('winning opp ship to Total_Expedited_Shipping_Cost__c'+opp.Total_Expedited_Shipping_Cost__c);
                         system.debug('losingOpp opp ship to Total_Expedited_Shipping_Cost__c'+losingOpp.Total_Expedited_Shipping_Cost__c);
-                        //If Total_Expedited_Shipping_Cost__c == 0 on winning opp and lossing opp have values for this field then we update winning opp's Total_Expedited_Shipping_Cost__c == 0
+                        //If Total_Expedited_Shipping_Cost__c == 0 on winning opp and losing opp have values for this field then we update winning opp's Total_Expedited_Shipping_Cost__c == 0
                         if(opp.Total_Expedited_Shipping_Cost__c== 0 && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Total_Expedited_Shipping_Cost__c')))){
                             opp.Total_Expedited_Shipping_Cost__c = losingOpp.Total_Expedited_Shipping_Cost__c ;
                         }
-                        //If Shipping_Method__c is null on winning opp and lossing opp have values for this field then we update winning opp's Shipping_Method__c
+                        //If Shipping_Method__c is null on winning opp and losing opp have values for this field then we update winning opp's Shipping_Method__c
                         if(String.isBlank(opp.Shipping_Method__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Shipping_Method__c')))){
                             opp.Shipping_Method__c = losingOpp.Shipping_Method__c ;
                         }
-                          //If Requested_Shipping_Method__c is null on winning opp and lossing opp have values for this field then we update winning opp's Requested_Shipping_Method__c
+                          //If Requested_Shipping_Method__c is null on winning opp and losing opp have values for this field then we update winning opp's Requested_Shipping_Method__c
                         if(String.isBlank(opp.Requested_Shipping_Method__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Requested_Shipping_Method__c')))){
                             opp.Requested_Shipping_Method__c = losingOpp.Requested_Shipping_Method__c ;
                         }
-                        //If Requested_Shipping_Date__c is null on winning opp and lossing opp have values for this field then we update winning opp's Requested_Shipping_Date__c
+                        //If Requested_Shipping_Date__c is null on winning opp and losing opp have values for this field then we update winning opp's Requested_Shipping_Date__c
                         if(opp.Requested_Shipping_Date__c==null && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Requested_Shipping_Date__c')))){
                             opp.Requested_Shipping_Date__c = losingOpp.Requested_Shipping_Date__c ;
                         }
-                        //If Requested_Shipping_Date__c is null on winning opp and lossing opp have values for this field then we update winning opp's Requested_Shipping_Date__c
+                        //If Requested_Shipping_Date__c is null on winning opp and losing opp have values for this field then we update winning opp's Requested_Shipping_Date__c
                         if(!opp.Saturday_Delivery__c && losingOpp.Saturday_Delivery__c && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Saturday_Delivery__c')))){
                             opp.Saturday_Delivery__c = losingOpp.Saturday_Delivery__c ;
                         }
-                         //If Signature_Required__c is null on winning opp and lossing opp have values for this field then we update winning opp's Signature_Required__c
+                         //If Signature_Required__c is null on winning opp and losing opp have values for this field then we update winning opp's Signature_Required__c
                         if(!opp.Signature_Required__c && losingOpp.Signature_Required__c && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Signature_Required__c')))){
                             opp.Signature_Required__c = losingOpp.Signature_Required__c ;
                         }
@@ -201,15 +201,15 @@ public class opportunityValidateAndMerge{
                                 opp.Gift_Registry_Start_Date__c = losingOpp.Gift_Registry_Start_Date__c;
                             }
                         } 
-                        //If Adoption_Type__c is N/A on winning opp and lossing opp have values other than N/A f then we update winning opp's Adoption_Type__c
+                        //If Adoption_Type__c is N/A on winning opp and losing opp have values other than N/A f then we update winning opp's Adoption_Type__c
                         if(opp.Adoption_Type__c == 'N/A' && losingOpp.Adoption_Type__c != 'N/A' && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Adoption_Type__c')))){
                             opp.Adoption_Type__c = losingOpp.Adoption_Type__c;
                         }
-                        //If Primary_Source__c is null on winning opp and lossing opp have values for this field then we update winning opp's Primary_Source__c
+                        //If Primary_Source__c is null on winning opp and losing opp have values for this field then we update winning opp's Primary_Source__c
                         if(String.isBlank(opp.Primary_Source__c) && String.isNotBlank(losingOpp.Primary_Source__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Primary_Source__c')))){
                             opp.Primary_Source__c = losingOpp.Primary_Source__c;
                         }
-                        //If Referred_By_Opportunity__c is null on winning opp and lossing opp have values for this field then we update winning opp's Referred_By_Opportunity__c
+                        //If Referred_By_Opportunity__c is null on winning opp and losing opp have values for this field then we update winning opp's Referred_By_Opportunity__c
                         if(String.isNotBlank(losingOpp.Referred_By_Opportunity__c) && String.isBlank(opp.Referred_By_Opportunity__c) && (mType == 'Standard' || ( mType == 'Custom' && CustomMergeFieldsAPI.contains('Referred_By_Opportunity__c')))){
                             opp.Referred_By_Opportunity__c = losingOpp.Referred_By_Opportunity__c;
                         }
@@ -446,7 +446,7 @@ public class opportunityValidateAndMerge{
         }
          
     }
-    //This Method reparent Opportunity Contact Roles to Winning Opportunity. If Losing opp have same role as winning opp then those OCRs are re-parented with role value as duplicate. If losing opp have unknown as role value same OCR is re-parented with same value. If winning opp's OCRs doesnt have any value of lossing opp's OCRs then OCRs are reparented with same Roles.
+    //This Method reparent Opportunity Contact Roles to Winning Opportunity. If Losing opp have same role as winning opp then those OCRs are re-parented with role value as duplicate. If losing opp have unknown as role value same OCR is re-parented with same value. If winning opp's OCRs doesnt have any value of losing opp's OCRs then OCRs are reparented with same Roles.
     //Note: we cannot update Opp id on opportunity contact Role so new contact roles are created and losing opp's contact roles are deleted in this method
     public static Map<String,List<String>> reParentOpportunityContactRole(Map<id,Opportunity> mergedWinOppMap,Map<id,Opportunity> mergedLosingOppMap,Map<id,id> WinLosOppIds){
         List<OpportunityContactRole> OCRList = new List<OpportunityContactRole>();//this list holds quiered OCRs of winning and losing opp
@@ -569,7 +569,7 @@ public class opportunityValidateAndMerge{
         }
         
     }
-    //Reparenting of opportunity providers if there winning opportunity doesnt have primary and delivering opp provider but losing opportunity have primary and delivering opp provider then reparent lossing opp providers to winning opp providers. If provider is same on winning opp and losing opp then we  update winning opp's opportunity provider insteady of reparenting
+    //Reparenting of opportunity providers if there winning opportunity doesnt have primary and delivering opp provider but losing opportunity have primary and delivering opp provider then reparent losing opp providers to winning opp providers. If provider is same on winning opp and losing opp then we  update winning opp's opportunity provider insteady of reparenting
     //Start of opp proivder reparenting 
     public static Map<String,List<String>> reParentOppProviders(Map<id,Opportunity> mergedWinOppMap,Map<id,Opportunity> mergedLosingOppMap,Map<id,id> WinLosOppIds){
         List<Opportunity_Provider__c> OppProviderList = new List<Opportunity_Provider__c>();//List holds queried on Opp Provider
@@ -890,7 +890,7 @@ public class opportunityValidateAndMerge{
         List<string> errors = new List<string>();
            Map<String,List<String>> ErrorsMap = new Map<String,List<String>>();
         if(WinLosOppIds!=null && !WinLosOppIds.isEmpty()){
-            LosingOppOpenTasks = [Select Id,WhatId,Status,WhoId,OwnerId from Task where WhatId IN:WinLosOppIds.values()];
+            LosingOppOpenTasks = [Select Id,WhatId,Status,WhoId,OwnerId from Task where WhatId IN:WinLosOppIds.values() AND Status='Open'];
             LosingOppOpenEvents = [Select Id,WhatId,StartDateTime,WhoId,OwnerId from Event where WhatId IN:WinLosOppIds.values() AND StartDateTime >: system.now()];
         }
         system.debug('LosingOppOpenTasks=============='+LosingOppOpenTasks);
@@ -983,7 +983,7 @@ public class opportunityValidateAndMerge{
     //End of Activites reparenting
     
     //Start Of files reparenting
-    //Reparenting files of lossing opportunity
+    //Reparenting files of losing opportunity
    public static Map<String,List<String>> reparentFiles(Map<id,Opportunity> mergedWinOppMap,Map<id,Opportunity> mergedLosingOppMap,Map<id,id> WinLosOppIds){
         List<ContentDocumentLink> filesList = new List<ContentDocumentLink>();
         Map<id,List<ContentDocumentLink>> OppFilesMap = new Map<id,List<ContentDocumentLink>>();
